@@ -1,17 +1,23 @@
 __author__ = 'Michal'
 
 import os
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem.snowball import SnowballStemmer
+import re
 
 
+directoryOfDataset = 'files/'
+stemmer = SnowballStemmer('english')
 
-# Here:
-# - remove numbers and special characters
-# - take only a core of a given word
-# - remove stop words
-# - lowercase
 
 def cleaningOfWord(wordBeingCleaned):
-    return wordBeingCleaned
+    wordBeingCleaned = wordBeingCleaned.lower()
+    wordBeingCleaned = re.sub('[^A-Za-z0-9]+', '', wordBeingCleaned)
+    if wordBeingCleaned in stopwords.words('english'):
+        return None
+
+    return stemmer.stem(wordBeingCleaned)
 
 def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
     words = set()
@@ -21,11 +27,12 @@ def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
         for line in currentFile:
             for word in line.split():
                 cleanedWord = cleaningOfWord(word)
-                if len(cleanedWord)> 0:
+                if not cleanedWord is None:
                     words.add(cleanedWord)
         currentFile.close()
+    return words
 
 if __name__ == 'main':
 
-    listOfArticleFiles = os.listdir('files/')
-    gatherAllWordsFromArticles(listOfArticleFiles, 'files/')
+    listOfArticleFiles = os.listdir(directoryOfDataset)
+    setOfWords = gatherAllWordsFromArticles(listOfArticleFiles, directoryOfDataset)
