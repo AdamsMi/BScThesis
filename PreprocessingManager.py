@@ -28,11 +28,12 @@ def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
             for word in line.split():
                 cleanedWord = cleaningOfWord(word)
                 if not cleanedWord is None:
-                    words.add(cleanedWord)
+                    words.add(cleanedWord.encode('ascii', 'ignore'))
         currentFile.close()
     return words
 
 if __name__ == 'main':
+
 
     listOfArticleFiles = os.listdir(directoryOfDataset)
     setOfWords = gatherAllWordsFromArticles(listOfArticleFiles, directoryOfDataset)
