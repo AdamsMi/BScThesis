@@ -6,9 +6,23 @@ from nltk.stem.snowball import SnowballStemmer
 import re
 import numpy
 import sys
+import math
 
 directoryOfDataset = 'files/'
 stemmer = SnowballStemmer('english')
+
+
+def inverseDocumentFrequency(matrix, mapOfWords, numberOfDocuments):
+    for x in xrange(len(mapOfWords)):
+        amountOfDocumentsWithGivenTerm = 0
+        for y in xrange(numberOfDocuments):
+            amountOfDocumentsWithGivenTerm+= 1 if matrix[x,y] > 0 else 0
+        #print str(x) + " " + str(amountOfDocumentsWithGivenTerm) + "\n"
+        idf = math.log(float(numberOfDocuments)/float(amountOfDocumentsWithGivenTerm),10)
+        print idf
+        matrix[x,:]*=idf
+    return matrix
+
 
 def createDictionaryForWordIndexes(wordsSet):
     dictionaryInProgress = dict()
@@ -59,7 +73,7 @@ def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
         for index in workingListOfOccurences[x]:
             matrix[index,x]+=1
 
-    return words, mapOfWords, workingListOfOccurences, matrix
+    return words, mapOfWords, matrix
 
 if __name__ == '__main__':
 
@@ -67,15 +81,21 @@ if __name__ == '__main__':
 
     listOfArticleFiles =   sorted(os.listdir(directoryOfDataset))
 
-    print "list of articles created"
+    print "list of articles created :\n"
+
+    print listOfArticleFiles
 
     if(len(listOfArticleFiles)<1):
         sys.exit("Wrong content of directory to be processed")
 
 
-    setOfWords , mapOfWords, mainMatrix, numpytest= gatherAllWordsFromArticles(listOfArticleFiles, directoryOfDataset)
+    setOfWords , mapOfWords, matrix= gatherAllWordsFromArticles(listOfArticleFiles, directoryOfDataset)
 
+
+    matrix = inverseDocumentFrequency(matrix, mapOfWords, len(listOfArticleFiles))
 
     print "Matrix"
-    print numpytest
+    print matrix
 
+    print "map of words"
+    print mapOfWords
