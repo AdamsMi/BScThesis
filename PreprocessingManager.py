@@ -7,10 +7,17 @@ import re
 import numpy
 import sys
 import math
-
+from scipy import linalg
 directoryOfDataset = 'files/'
 stemmer = SnowballStemmer('english')
 
+def low_rank_approx( matrix, rank):
+    U, d, Vt = linalg.svd(matrix)
+    D = linalg.diagsvd(d, matrix.shape[0], matrix.shape[1])
+    D1 = D.copy()
+    D1[D1 < d[int(rank)]] = 0.
+
+    return  numpy.dot(numpy.dot(U, D1), Vt)
 
 def inverseDocumentFrequency(matrix, mapOfWords, numberOfDocuments):
     for x in xrange(len(mapOfWords)):
