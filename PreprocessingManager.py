@@ -8,6 +8,10 @@ import numpy
 import sys
 import math
 from scipy import linalg
+import pickle
+
+RANK_OF_APPROXIMATION =2
+
 directoryOfDataset = 'files/'
 stemmer = SnowballStemmer('english')
 
@@ -18,6 +22,16 @@ def low_rank_approx( matrix, rank):
     D1[D1 < d[int(rank)]] = 0.
 
     return  numpy.dot(numpy.dot(U, D1), Vt)
+
+def normalization(matrix, amountOfDocuments):
+    for x in xrange(amountOfDocuments):
+        norm = 0.0
+        for a in matrix[:,x]:
+            norm+=float(a)**2
+        print "Norm : ", norm
+        matrix[:,x]/=norm
+    return matrix
+
 
 def inverseDocumentFrequency(matrix, mapOfWords, numberOfDocuments):
     for x in xrange(len(mapOfWords)):
@@ -88,21 +102,40 @@ if __name__ == '__main__':
 
     listOfArticleFiles =   sorted(os.listdir(directoryOfDataset))
 
-    print "list of articles created :\n"
 
-    print listOfArticleFiles
+    amountOfFiles = len(listOfArticleFiles)
 
-    if(len(listOfArticleFiles)<1):
+    #print "list of articles created :\n"
+
+    #print listOfArticleFiles
+
+    if(amountOfFiles<1):
         sys.exit("Wrong content of directory to be processed")
 
 
     setOfWords , mapOfWords, matrix= gatherAllWordsFromArticles(listOfArticleFiles, directoryOfDataset)
 
 
-    matrix = inverseDocumentFrequency(matrix, mapOfWords, len(listOfArticleFiles))
+    print "Matrix"
+    print matrix
+
+    matrix = inverseDocumentFrequency(matrix, mapOfWords, amountOfFiles)
 
     print "Matrix"
     print matrix
 
-    print "map of words"
-    print mapOfWords
+    matrix = normalization(matrix, amountOfFiles)
+
+
+    print "Matrix"
+    print matrix
+
+    matrix = low_rank_approx(matrix, RANK_OF_APPROXIMATION)
+
+
+    print "Matrix"
+    print matrix
+
+
+    output = open('preprocessedMatrix.pkl', 'wb')
+    pickle.dump(matrix, output)
