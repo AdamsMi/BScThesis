@@ -9,6 +9,7 @@ import sys
 import math
 from scipy import linalg
 import pickle
+import scipy
 
 RANK_OF_APPROXIMATION =2
 
@@ -114,28 +115,42 @@ if __name__ == '__main__':
 
 
     setOfWords , mapOfWords, matrix= gatherAllWordsFromArticles(listOfArticleFiles, directoryOfDataset)
-
-
-    print "Matrix"
-    print matrix
-
     matrix = inverseDocumentFrequency(matrix, mapOfWords, amountOfFiles)
-
-    print "Matrix"
-    print matrix
-
     matrix = normalization(matrix, amountOfFiles)
-
-
-    print "Matrix"
-    print matrix
-
     matrix = low_rank_approx(matrix, RANK_OF_APPROXIMATION)
 
 
-    print "Matrix"
-    print matrix
+
+    matrix = scipy.sparse.csc_matrix(matrix)
+
+    output = open('dumps/data.pkl', 'wb')
+    pickle.dump(matrix.data, output)
+    output.close()
+
+    output = open('dumps/indices.pkl', 'wb')
+    pickle.dump(matrix.indices, output)
+    output.close()
+
+    output = open('dumps/indptr.pkl', 'wb')
+    pickle.dump(matrix.indptr, output)
+    output.close()
+
+    output = open('dumps/words.pkl', 'wb')
+    pickle.dump(setOfWords, output)
+    output.close()
 
 
-    output = open('preprocessedMatrix.pkl', 'wb')
-    pickle.dump(matrix, output)
+    wordsDict = {}
+
+    for x in xrange(len(mapOfWords)):
+        wordsDict[mapOfWords[x]]=x
+
+    print wordsDict
+
+    output = open('dumps/wordsMap.pkl', 'wb')
+    pickle.dump(wordsDict, output)
+    output.close()
+
+    output = open('dumps/documentsAmount.pkl', 'wb')
+    pickle.dump(amountOfFiles, output)
+    output.close()
