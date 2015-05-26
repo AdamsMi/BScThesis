@@ -16,6 +16,10 @@ RANK_OF_APPROXIMATION =2
 directoryOfDataset = 'files/'
 stemmer = SnowballStemmer('english')
 
+
+#low-rank approximation of a given matrix
+# args: matrix - matrix to be approximated, rank - rank of approximation
+
 def low_rank_approx( matrix, rank):
     U, d, Vt = linalg.svd(matrix)
     D = linalg.diagsvd(d, matrix.shape[0], matrix.shape[1])
@@ -23,6 +27,8 @@ def low_rank_approx( matrix, rank):
     D1[D1 < d[int(rank)]] = 0.
 
     return  numpy.dot(numpy.dot(U, D1), Vt)
+
+
 
 def normalization(matrix, amountOfDocuments):
     for x in xrange(amountOfDocuments):
@@ -97,30 +103,7 @@ def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
 
     return words, mapOfWords, matrix
 
-if __name__ == '__main__':
-
-    print "Imports done"
-
-    listOfArticleFiles =   sorted(os.listdir(directoryOfDataset))
-
-
-    amountOfFiles = len(listOfArticleFiles)
-
-    #print "list of articles created :\n"
-
-    #print listOfArticleFiles
-
-    if(amountOfFiles<1):
-        sys.exit("Wrong content of directory to be processed")
-
-
-    setOfWords , mapOfWords, matrix= gatherAllWordsFromArticles(listOfArticleFiles, directoryOfDataset)
-    matrix = inverseDocumentFrequency(matrix, mapOfWords, amountOfFiles)
-    matrix = normalization(matrix, amountOfFiles)
-    matrix = low_rank_approx(matrix, RANK_OF_APPROXIMATION)
-
-
-
+def writeDataToFile(matrix, setOfWords, mapOfWords, amountOfFiles):
     matrix = scipy.sparse.csc_matrix(matrix)
 
     output = open('dumps/data.pkl', 'wb')
@@ -154,3 +137,36 @@ if __name__ == '__main__':
     output = open('dumps/documentsAmount.pkl', 'wb')
     pickle.dump(amountOfFiles, output)
     output.close()
+
+
+
+if __name__ == '__main__':
+
+    print "Imports done"
+
+    listOfArticleFiles =   sorted(os.listdir(directoryOfDataset))
+
+
+    amountOfFiles = len(listOfArticleFiles)
+
+    print "Amount of files: ", amountOfFiles
+
+
+    if(amountOfFiles<1):
+        sys.exit("Wrong content of directory to be processed")
+
+
+    setOfWords , mapOfWords, matrix= gatherAllWordsFromArticles(listOfArticleFiles, directoryOfDataset)
+
+    print "Words've been gathered from articles, amount: ", len(setOfWords)
+
+    matrix = inverseDocumentFrequency(matrix, mapOfWords, amountOfFiles)
+    matrix = normalization(matrix, amountOfFiles)
+
+    print "Idf and normalization added, beginning SVD..."
+
+    matrix = low_rank_approx(matrix, RANK_OF_APPROXIMATION)
+
+    writeDataToFile(matrix, setOfWords, mapOfWords, amountOfFiles)
+
+   print "Successfully finished"
