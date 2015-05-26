@@ -1,8 +1,7 @@
 __author__ = 'Michal'
 
 import os
-from nltk.corpus import stopwords
-from nltk.stem.snowball import SnowballStemmer
+
 import re
 import numpy
 import sys
@@ -17,7 +16,6 @@ from sparsesvd import sparsesvd
 RANK_OF_APPROXIMATION =100
 
 directoryOfDataset = 'files/'
-stemmer = SnowballStemmer('english')
 
 
 #low-rank approximation of a given matrix
@@ -88,16 +86,6 @@ def createDictionaryForWordIndexes(wordsSet):
 
     return dictionaryInProgress
 
-def cleaningOfWord(wordBeingCleaned):
-
-    wordBeingCleaned = wordBeingCleaned.lower()
-    wordBeingCleaned = re.sub('[^A-Za-z0-9]+', '', wordBeingCleaned)
-    if wordBeingCleaned in stopwords.words('english'):
-        return None
-
-    word = stemmer.stem(wordBeingCleaned).encode('ascii', 'english')
-    return word if word != '' else None
-
 def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
     wordAmount = 0
     words = set()
@@ -113,16 +101,13 @@ def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
         indexesOfWordsInCurrentFile = []
         for line in currentFile:
             for word in line.split():
-                cleanedWord = cleaningOfWord(word)
-                if not cleanedWord is None:
-
-                    if cleanedWord in words:
-                        indexesOfWordsInCurrentFile.append(dictOfWords[cleanedWord])
+                    if word in words:
+                        indexesOfWordsInCurrentFile.append(dictOfWords[word])
 
                     else:
-                        words.add(cleanedWord)
-                        dictOfWords[cleanedWord] = wordAmount
-                        mapOfWords.append(cleanedWord)
+                        words.add(word)
+                        dictOfWords[word] = wordAmount
+                        mapOfWords.append(word)
 
                         indexesOfWordsInCurrentFile.append(wordAmount)
                         wordAmount+=1
