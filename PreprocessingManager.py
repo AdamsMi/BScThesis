@@ -10,8 +10,11 @@ import math
 from scipy import linalg
 import pickle
 import scipy
+import time
+import scipy.sparse.linalg
+from sparsesvd import sparsesvd
 
-RANK_OF_APPROXIMATION =2
+RANK_OF_APPROXIMATION =100
 
 directoryOfDataset = 'files/'
 stemmer = SnowballStemmer('english')
@@ -21,21 +24,47 @@ stemmer = SnowballStemmer('english')
 # args: matrix - matrix to be approximated, rank - rank of approximation
 
 def low_rank_approx( matrix, rank):
-    U, d, Vt = linalg.svd(matrix)
-    D = linalg.diagsvd(d, matrix.shape[0], matrix.shape[1])
-    D1 = D.copy()
-    D1[D1 < d[int(rank)]] = 0.
 
+    start = time.time()
+    U, d, Vt = linalg.svd(matrix)
+    stop = time.time()
+    print "linalg.svd took: ", stop - start, " seconds\n"
+
+    start = time.time()
+    D = linalg.diagsvd(d, matrix.shape[0], matrix.shape[1])
+    stop = time.time()
+    print "linalg.diagsvd took: ", stop - start, " seconds\n"
+
+    start = time.time()
+    D1 = D.copy()
+    stop = time.time()
+    print "D.copy took: ", stop - start, " seconds\n"
+
+    start = time.time()
+    D1[D1 < d[int(rank)]] = 0.
+    stop = time.time()
+    print "Reseting small singular values took: ", stop-start, " seconds\n"
     return  numpy.dot(numpy.dot(U, D1), Vt)
 
+def sparseLowRankAppr(matrix, rank):
+    start = time.time()
+    smat = scipy.sparse.csc_matrix(matrix)
+    stop = time.time()
+    print "scipy.sparse.csc_matrix took: ", stop - start, " seconds\n"
 
+    start = time.time()
+    ut, s, vt = sparsesvd(smat, rank)
+    stop = time.time()
+    print "sparsesvd took: ", stop - start, " seconds\n"
+
+    return numpy.dot(ut.T, numpy.dot(numpy.diag(s), vt))
 
 def normalization(matrix, amountOfDocuments):
     for x in xrange(amountOfDocuments):
         norm = 0.0
         for a in matrix[:,x]:
             norm+=float(a)**2
-        print "Norm : ", norm
+        #print "Norm : ", norm
         matrix[:,x]/=norm
     return matrix
 
@@ -47,7 +76,7 @@ def inverseDocumentFrequency(matrix, mapOfWords, numberOfDocuments):
             amountOfDocumentsWithGivenTerm+= 1 if matrix[x,y] > 0 else 0
         #print str(x) + " " + str(amountOfDocumentsWithGivenTerm) + "\n"
         idf = math.log(float(numberOfDocuments)/float(amountOfDocumentsWithGivenTerm),10)
-        print idf
+        #print idf
         matrix[x,:]*=idf
     return matrix
 
@@ -67,15 +96,19 @@ def cleaningOfWord(wordBeingCleaned):
         return None
 
     word = stemmer.stem(wordBeingCleaned).encode('ascii', 'english')
-    return word
+    return word if word != '' else None
 
 def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
-
+    wordAmount = 0
     words = set()
+    dictOfWords = dict()
     mapOfWords = []
     workingListOfOccurences = []
-
+    count =1
     for currentFileName in listOfArticles:
+        if count%100==0:
+            print "Files preprocessed :", count
+        count+=1
         currentFile = open(pathToArticles + currentFileName)
         indexesOfWordsInCurrentFile = []
         for line in currentFile:
@@ -84,13 +117,15 @@ def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
                 if not cleanedWord is None:
 
                     if cleanedWord in words:
-                        indexesOfWordsInCurrentFile.append(mapOfWords.index(cleanedWord))
+                        indexesOfWordsInCurrentFile.append(dictOfWords[cleanedWord])
 
                     else:
                         words.add(cleanedWord)
+                        dictOfWords[cleanedWord] = wordAmount
                         mapOfWords.append(cleanedWord)
 
-                        indexesOfWordsInCurrentFile.append(len(words)-1)
+                        indexesOfWordsInCurrentFile.append(wordAmount)
+                        wordAmount+=1
 
         workingListOfOccurences.append(indexesOfWordsInCurrentFile)
         currentFile.close()
@@ -144,8 +179,10 @@ if __name__ == '__main__':
 
     print "Imports done"
 
-    listOfArticleFiles =   sorted(os.listdir(directoryOfDataset))
+    listOfArticles =   sorted(os.listdir(directoryOfDataset))
 
+
+    listOfArticleFiles = listOfArticles[:500]
 
     amountOfFiles = len(listOfArticleFiles)
 
@@ -155,18 +192,28 @@ if __name__ == '__main__':
     if(amountOfFiles<1):
         sys.exit("Wrong content of directory to be processed")
 
-
+    start = time.time()
     setOfWords , mapOfWords, matrix= gatherAllWordsFromArticles(listOfArticleFiles, directoryOfDataset)
+    stop = time.time()
 
-    print "Words've been gathered from articles, amount: ", len(setOfWords)
-
+    print "Words've been gathered from articles, amount: ", len(setOfWords), " it took: ", stop- start, " seconds\n"
+    start = time.time()
     matrix = inverseDocumentFrequency(matrix, mapOfWords, amountOfFiles)
+    stop = time.time()
+
+    print "idf done, took : ", stop-start, " seconds\n"
+
+    start = time.time()
     matrix = normalization(matrix, amountOfFiles)
+    stop = time.time()
 
-    print "Idf and normalization added, beginning SVD..."
+    print "Normalization done, took: ", stop-start, " seconds\n"
 
-    matrix = low_rank_approx(matrix, RANK_OF_APPROXIMATION)
+    matrix = sparseLowRankAppr(matrix, RANK_OF_APPROXIMATION)
 
+
+    start = time.time()
     writeDataToFile(matrix, setOfWords, mapOfWords, amountOfFiles)
+    stop = time.time()
 
-   print "Successfully finished"
+    print "Writing to file done, took: ", stop - start, " seconds\n"
