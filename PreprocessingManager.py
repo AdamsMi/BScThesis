@@ -1,8 +1,6 @@
 __author__ = 'Michal'
 
 import os
-
-import re
 import numpy
 import sys
 import math
@@ -16,10 +14,6 @@ from sparsesvd import sparsesvd
 RANK_OF_APPROXIMATION =100
 
 directoryOfDataset = 'files/'
-
-
-#low-rank approximation of a given matrix
-# args: matrix - matrix to be approximated, rank - rank of approximation
 
 def low_rank_approx( matrix, rank):
 
@@ -72,9 +66,7 @@ def inverseDocumentFrequency(matrix, mapOfWords, numberOfDocuments):
         amountOfDocumentsWithGivenTerm = 0
         for y in xrange(numberOfDocuments):
             amountOfDocumentsWithGivenTerm+= 1 if matrix[x,y] > 0 else 0
-        #print str(x) + " " + str(amountOfDocumentsWithGivenTerm) + "\n"
         idf = math.log(float(numberOfDocuments)/float(amountOfDocumentsWithGivenTerm),10)
-        #print idf
         matrix[x,:]*=idf
     return matrix
 
@@ -92,11 +84,7 @@ def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
     dictOfWords = dict()
     mapOfWords = []
     workingListOfOccurences = []
-    count =1
     for currentFileName in listOfArticles:
-        if count%100==0:
-            print "Files preprocessed :", count
-        count+=1
         currentFile = open(pathToArticles + currentFileName)
         indexesOfWordsInCurrentFile = []
         for line in currentFile:
@@ -164,10 +152,7 @@ if __name__ == '__main__':
 
     print "Imports done"
 
-    listOfArticles =   sorted(os.listdir(directoryOfDataset))
-
-
-    listOfArticleFiles = listOfArticles[:500]
+    listOfArticleFiles =   sorted(os.listdir(directoryOfDataset))
 
     amountOfFiles = len(listOfArticleFiles)
 
