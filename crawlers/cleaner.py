@@ -4,13 +4,13 @@ import sqlite3
 
 
 def write_to_file(content, new_file_name):
-    new_file = open(new_file_name)
+    new_file = open(new_file_name, 'w')
     new_file.write(content)
     new_file.close()
 
 
 
-STOP_CONDITION = 100
+STOP_CONDITION = 16556
 
 # Create database and get cursor
 db = sqlite3.connect('news.db')
@@ -32,6 +32,7 @@ for file in files:
     url = ""; title = "";
     content = ""
 
+
     # Read lines data
     for line in news.readlines():
         if lineNr==0:
@@ -41,8 +42,8 @@ for file in files:
         elif not line=="\n":
             # Clean here
             if len(line)<40:
-                line.replace("\n", " ")
-            content += line.rstrip().lstrip()
+                line = line.rstrip()
+            content += line.lstrip()
             fullLineCount += 1
 
         lineNr += 1
