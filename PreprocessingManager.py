@@ -5,7 +5,7 @@ import numpy
 import sys
 import math
 from scipy import linalg
-import pickle
+import cPickle as pickle
 import scipy
 import time
 import scipy.sparse.linalg
@@ -116,6 +116,11 @@ def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
 
     return words, dictOfWords, matrix, dictOfTermOccurences, mapOfWords
 
+def save_sparse_csr(filename,array):
+    numpy.savez(filename,data = array.data ,indices=array.indices,
+             indptr =array.indptr, shape=array.shape )
+
+
 def writeDataToFile(matrix, setOfWords, mapOfWords, amountOfFiles):
 
 
@@ -123,17 +128,7 @@ def writeDataToFile(matrix, setOfWords, mapOfWords, amountOfFiles):
 
     start= time.time()
 
-    output = open('dumps/data.pkl', 'wb')
-    pickle.dump(mat.data, output)
-    output.close()
-
-    output = open('dumps/indices.pkl', 'wb')
-    pickle.dump(mat.indices, output)
-    output.close()
-
-    output = open('dumps/indptr.pkl', 'wb')
-    pickle.dump(mat.indptr, output)
-    output.close()
+    save_sparse_csr('dumps/data', mat)
 
     stop = time.time()
     print "Writing matrix to file took: ", stop-start, "seconds \n"
@@ -160,7 +155,7 @@ if __name__ == '__main__':
 
     print "Imports done"
 
-    listOfArticleFiles =   sorted(os.listdir(directoryOfDataset))[:500]
+    listOfArticleFiles =   sorted(os.listdir(directoryOfDataset))
 
     amountOfFiles = len(listOfArticleFiles)
 
