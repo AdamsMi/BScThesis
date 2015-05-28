@@ -11,7 +11,7 @@ import time
 import scipy.sparse.linalg
 from sparsesvd import sparsesvd
 
-RANK_OF_APPROXIMATION =100
+RANK_OF_APPROXIMATION =400
 
 directoryOfDataset = 'files/'
 
