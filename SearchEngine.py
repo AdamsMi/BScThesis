@@ -1,39 +1,39 @@
 __author__ = 'Michal'
 
 import pickle
-import scipy
+from scipy.sparse import csc_matrix, lil_matrix
+import numpy
+import time
+import os
 
-from PreprocessingManager import cleaningOfWord
-from PreprocessingManager import inverseDocumentFrequency
+from FileCleaner import cleaningOfWord
+
+MATRIX_FILENAME = 'data.npz'
+
+def load_sparse_csc(filename):
+    loader = numpy.load(filename)
+    return csc_matrix((  loader['data'], loader['indices'], loader['indptr']),
+                         shape = loader['shape'])
 
 def loadData(directory):
+    start = time.time()
+    matrix = load_sparse_csc(directory + MATRIX_FILENAME)
+    stop = time.time()
 
-    inputFile = open(directory + 'data.pkl', 'rb')
-    data = pickle.load(inputFile)
-    inputFile.close()
+    with open(directory + 'words.pkl', 'rb') as inputFile:
+        setOfWords = pickle.load(inputFile)
 
-    inputFile = open(directory + 'indices.pkl', 'rb')
-    indices = pickle.load(inputFile)
-    inputFile.close()
 
-    inputFile = open(directory + 'indptr.pkl', 'rb')
-    indptr = pickle.load(inputFile)
-    inputFile.close()
+    with open(directory + 'wordsMap.pkl', 'rb') as inputFile:
+        mapOfWords = pickle.load(inputFile)
 
-    inputFile = open(directory + 'words.pkl', 'rb')
-    setOfWords = pickle.load(inputFile)
-    inputFile.close()
+    with open(directory + 'documentsAmount.pkl', 'rb') as inputFile:
+        amountOfFiles = pickle.load(inputFile)
 
-    inputFile = open(directory + 'wordsMap.pkl', 'rb')
-    mapOfWords = pickle.load(inputFile)
-    inputFile.close()
+    return matrix, setOfWords, mapOfWords, amountOfFiles
 
-    inputFile = open(directory + 'documentsAmount.pkl', 'rb')
-    amountOfFiles = pickle.load(inputFile)
-    inputFile.close()
 
-    return data, indices, indptr, setOfWords, mapOfWords, amountOfFiles
-
+#Just cleans the words from a user's query
 def cleanVector(vector):
     cleanedVector = []
     for word in vector:
@@ -42,34 +42,37 @@ def cleanVector(vector):
             cleanedVector.append(cleanWord)
     return cleanedVector
 
-
-
-def findCorrelations(matrix, vector, amountOfDocuments):
-    similarities = []
-    for x in xrange(amountOfDocuments):
-        simil = bagOfWords.dot(matrix[:, x])[0, 0]
-        similarities.append((x, simil))
-    return similarities
-
 def createBagOfWordsFromVector(vector, amountOfTerms, dictionary):
-    bagOfWords = scipy.sparse.lil_matrix((1, amountOfTerms), dtype=float)
+    bagOfWords = lil_matrix((1, amountOfTerms), dtype=float)
     for x in vector:
         try:
             bagOfWords[0,dictionary[x]]+=1
         except:
-            print "one of the words not in out dataset"
+            print "one of the words not in out dataset, that is to say: %s" %x
             continue
-    bagOfWords = scipy.sparse.csc_matrix(bagOfWords, dtype=float)
+    bagOfWords = csc_matrix(bagOfWords, dtype=float)
     return bagOfWords
 
+def findCorrelations(matrix, vector, amountOfDocuments):
+    similarities = []
+    for x in xrange(amountOfDocuments):
+        simil = vector.dot(matrix[:, x])[0, 0]
+        similarities.append((x, simil))
+    return sorted(similarities, key = lambda tup: tup[1], reverse=True)[:5]
+
+
 if __name__ == '__main__':
-    matrix, indices, indptr, setOfWords, dictOfWords, amountOfFiles= loadData('dumps/')
-    matrix = scipy.sparse.csc_matrix((matrix, indices, indptr))
+    matrix, setOfWords, dictOfWords, amountOfFiles = loadData('dumps/')
     print "Data loaded from files & Matrix built\n"
     vector = raw_input("Input: ").split()
 
     cleanedVect =  cleanVector(vector)
     bagOfWords = createBagOfWordsFromVector(cleanedVect, len(setOfWords), dictOfWords)
-    print bagOfWords
-    print findCorrelations(matrix, bagOfWords, amountOfFiles)
+    a= findCorrelations(matrix, bagOfWords, amountOfFiles)
+
+
+    list = sorted(os.listdir('files/'))
+    for x in a:
+        print list[x[0]]
+
 
