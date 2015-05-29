@@ -1,50 +1,73 @@
 __author__ = 'Michal'
 
 import os
-from nltk.corpus import stopwords
-from nltk.stem.snowball import SnowballStemmer
-import re
 import numpy
 import sys
 import math
 from scipy import linalg
-import pickle
+import cPickle as pickle
 import scipy
+import time
+import scipy.sparse.linalg
+from sparsesvd import sparsesvd
 
-RANK_OF_APPROXIMATION =2
+RANK_OF_APPROXIMATION =100
 
 directoryOfDataset = 'files/'
-stemmer = SnowballStemmer('english')
 
 def low_rank_approx( matrix, rank):
-    U, d, Vt = linalg.svd(matrix)
-    D = linalg.diagsvd(d, matrix.shape[0], matrix.shape[1])
-    D1 = D.copy()
-    D1[D1 < d[int(rank)]] = 0.
 
+    start = time.time()
+    U, d, Vt = linalg.svd(matrix)
+    stop = time.time()
+    print "linalg.svd took: ", stop - start, " seconds\n"
+
+    start = time.time()
+    D = linalg.diagsvd(d, matrix.shape[0], matrix.shape[1])
+    stop = time.time()
+    print "linalg.diagsvd took: ", stop - start, " seconds\n"
+
+    start = time.time()
+    D1 = D.copy()
+    stop = time.time()
+    print "D.copy took: ", stop - start, " seconds\n"
+
+    start = time.time()
+    D1[D1 < d[int(rank)]] = 0.
+    stop = time.time()
+    print "Reseting small singular values took: ", stop-start, " seconds\n"
     return  numpy.dot(numpy.dot(U, D1), Vt)
 
+def sparseLowRankAppr(matrix, rank):
+    smat = scipy.sparse.csc_matrix(matrix)
+    ut, s, vt = sparsesvd(smat, rank)
+    return numpy.dot(ut.T, numpy.dot(numpy.diag(s), vt))
+
+
 def normalization(matrix, amountOfDocuments):
-    for x in xrange(amountOfDocuments):
-        norm = 0.0
-        for a in matrix[:,x]:
-            norm+=float(a)**2
-        print "Norm : ", norm
-        matrix[:,x]/=norm
+    matrixSparse = scipy.sparse.csc_matrix(matrix)
+
+    nonzeroIndices = matrixSparse.nonzero()
+    firstList = nonzeroIndices[0]
+    secondList = nonzeroIndices[1]
+    amountOfNonZeroCells = len(firstList)
+    sumList = [0 for x in xrange(amountOfDocuments)]
+
+    for cellIndex in xrange(amountOfNonZeroCells):
+        sumList[secondList[cellIndex]]+=matrix[firstList[cellIndex], secondList[cellIndex]]**2
+
+    for cellInd in xrange(amountOfNonZeroCells):
+        matrix[firstList[cellInd], secondList[cellInd]]/=sumList[secondList[cellInd]]
+
     return matrix
 
 
-def inverseDocumentFrequency(matrix, mapOfWords, numberOfDocuments):
-    for x in xrange(len(mapOfWords)):
-        amountOfDocumentsWithGivenTerm = 0
-        for y in xrange(numberOfDocuments):
-            amountOfDocumentsWithGivenTerm+= 1 if matrix[x,y] > 0 else 0
-        #print str(x) + " " + str(amountOfDocumentsWithGivenTerm) + "\n"
-        idf = math.log(float(numberOfDocuments)/float(amountOfDocumentsWithGivenTerm),10)
-        print idf
+def idf(matrix, numberOfWords, numberOfArticles, dictOfTermOccurences, listOfWords):
+    for x in xrange(numberOfWords):
+        amountOfDocumentsWithGivenTerm = dictOfTermOccurences[listOfWords[x]]
+        idf = math.log(float(numberOfArticles)/float(amountOfDocumentsWithGivenTerm), 10)
         matrix[x,:]*=idf
     return matrix
-
 
 def createDictionaryForWordIndexes(wordsSet):
     dictionaryInProgress = dict()
@@ -53,38 +76,30 @@ def createDictionaryForWordIndexes(wordsSet):
 
     return dictionaryInProgress
 
-def cleaningOfWord(wordBeingCleaned):
-
-    wordBeingCleaned = wordBeingCleaned.lower()
-    wordBeingCleaned = re.sub('[^A-Za-z0-9]+', '', wordBeingCleaned)
-    if wordBeingCleaned in stopwords.words('english'):
-        return None
-
-    word = stemmer.stem(wordBeingCleaned).encode('ascii', 'english')
-    return word
-
 def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
-
+    wordAmount = 0
     words = set()
-    mapOfWords = []
+    dictOfWords = dict()
+    dictOfTermOccurences = dict()
+
     workingListOfOccurences = []
+    mapOfWords = []
 
     for currentFileName in listOfArticles:
         currentFile = open(pathToArticles + currentFileName)
         indexesOfWordsInCurrentFile = []
         for line in currentFile:
             for word in line.split():
-                cleanedWord = cleaningOfWord(word)
-                if not cleanedWord is None:
-
-                    if cleanedWord in words:
-                        indexesOfWordsInCurrentFile.append(mapOfWords.index(cleanedWord))
+                    if word in words:
+                        indexesOfWordsInCurrentFile.append(dictOfWords[word])
 
                     else:
-                        words.add(cleanedWord)
-                        mapOfWords.append(cleanedWord)
-
-                        indexesOfWordsInCurrentFile.append(len(words)-1)
+                        dictOfTermOccurences[word] = 0
+                        words.add(word)
+                        dictOfWords[word] = wordAmount
+                        mapOfWords.append(word)
+                        indexesOfWordsInCurrentFile.append(wordAmount)
+                        wordAmount+=1
 
         workingListOfOccurences.append(indexesOfWordsInCurrentFile)
         currentFile.close()
@@ -94,8 +109,47 @@ def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
     for x in xrange(len(workingListOfOccurences)):
         for index in workingListOfOccurences[x]:
             matrix[index,x]+=1
+        wordsInDocument = set(workingListOfOccurences[x])
+        for x in wordsInDocument:
+            dictOfTermOccurences[mapOfWords[x]]+=1
 
-    return words, mapOfWords, matrix
+
+    return words, dictOfWords, matrix, dictOfTermOccurences, mapOfWords
+
+def save_sparse_csr(filename,array):
+    numpy.savez(filename,data = array.data ,indices=array.indices,
+             indptr =array.indptr, shape=array.shape )
+
+
+def writeDataToFile(matrix, setOfWords, mapOfWords, amountOfFiles):
+
+
+    mat = scipy.sparse.csc_matrix(matrix)
+
+    start= time.time()
+
+    save_sparse_csr('dumps/data', mat)
+
+    stop = time.time()
+    print "Writing matrix to file took: ", stop-start, "seconds \n"
+
+    start = time.time()
+    output = open('dumps/words.pkl', 'wb')
+    pickle.dump(setOfWords, output)
+    output.close()
+    stop = time.time()
+    print "Writing set of words to file took: ", stop-start, "seconds \n"
+
+    start = time.time()
+    output = open('dumps/wordsMap.pkl', 'wb')
+    pickle.dump(mapOfWords, output)
+    output.close()
+
+    output = open('dumps/documentsAmount.pkl', 'wb')
+    pickle.dump(amountOfFiles, output)
+    output.close()
+    stop = time.time()
+    print "Writing map and amount of files to files took: ", stop-start, "seconds \n"
 
 if __name__ == '__main__':
 
@@ -103,54 +157,44 @@ if __name__ == '__main__':
 
     listOfArticleFiles =   sorted(os.listdir(directoryOfDataset))
 
-
     amountOfFiles = len(listOfArticleFiles)
 
-    #print "list of articles created :\n"
+    print "Amount of files: ", amountOfFiles
 
-    #print listOfArticleFiles
 
     if(amountOfFiles<1):
         sys.exit("Wrong content of directory to be processed")
 
+    start = time.time()
+    setOfWords , mapOfWords, matrix, dictOfTermOccurences, listOfWords= gatherAllWordsFromArticles(listOfArticleFiles, directoryOfDataset)
+    stop = time.time()
 
-    setOfWords , mapOfWords, matrix= gatherAllWordsFromArticles(listOfArticleFiles, directoryOfDataset)
-    matrix = inverseDocumentFrequency(matrix, mapOfWords, amountOfFiles)
+    print "Gathering words done, took: ", stop-start, " seconds\n"
+    print "Amount of words: ", len(setOfWords), "\n"
+
+    start = time.time()
+    matrix = idf(matrix, len(setOfWords), amountOfFiles,dictOfTermOccurences, listOfWords)
+    stop = time.time()
+
+    print "idf done, took : ", stop-start, " seconds\n"
+
+
+
+    start = time.time()
     matrix = normalization(matrix, amountOfFiles)
-    matrix = low_rank_approx(matrix, RANK_OF_APPROXIMATION)
+    stop = time.time()
 
+    print "Normalization done, took: ", stop-start, " seconds\n"
 
+    start = time.time()
+    matrix = sparseLowRankAppr(matrix, RANK_OF_APPROXIMATION)
+    stop = time.time()
 
-    matrix = scipy.sparse.csc_matrix(matrix)
+    print "Low rank appr done, took: ", stop-start, " seconds\n"
 
-    output = open('dumps/data.pkl', 'wb')
-    pickle.dump(matrix.data, output)
-    output.close()
+    start = time.time()
+    writeDataToFile(matrix, setOfWords, mapOfWords, amountOfFiles)
+    stop = time.time()
 
-    output = open('dumps/indices.pkl', 'wb')
-    pickle.dump(matrix.indices, output)
-    output.close()
+    print "Writing to file done, took: ", stop - start, " seconds\n"
 
-    output = open('dumps/indptr.pkl', 'wb')
-    pickle.dump(matrix.indptr, output)
-    output.close()
-
-    output = open('dumps/words.pkl', 'wb')
-    pickle.dump(setOfWords, output)
-    output.close()
-
-
-    wordsDict = {}
-
-    for x in xrange(len(mapOfWords)):
-        wordsDict[mapOfWords[x]]=x
-
-    print wordsDict
-
-    output = open('dumps/wordsMap.pkl', 'wb')
-    pickle.dump(wordsDict, output)
-    output.close()
-
-    output = open('dumps/documentsAmount.pkl', 'wb')
-    pickle.dump(amountOfFiles, output)
-    output.close()
