@@ -32,11 +32,13 @@ def normalization(matrix, amountOfDocuments):
     return matrix
 
 def idf(matrix, numberOfWords, numberOfArticles, dictOfTermOccurences, listOfWords):
+    idfs = []
     for x in xrange(numberOfWords):
         amountOfDocumentsWithGivenTerm = dictOfTermOccurences[listOfWords[x]]
         idf = math.log(float(numberOfArticles)/float(amountOfDocumentsWithGivenTerm), 10)
         matrix[x,:]*=idf
-    return matrix
+        idfs.append(idf)
+    return matrix, idfs
 
 def createDictionaryForWordIndexes(wordsSet):
     dictionaryInProgress = dict()
@@ -85,46 +87,30 @@ def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
 
     return words, dictOfWords, matrix, dictOfTermOccurences, mapOfWords
 
-def save_sparse_csr(filename,array):
-    numpy.savez(filename,data = array.data ,indices=array.indices,
-             indptr =array.indptr, shape=array.shape )
-
-
-def writeDataToFile(matrix, setOfWords, mapOfWords, amountOfFiles):
-
+def writeDataToFile(matrix, dictOfThingsToDump):
 
     mat = scipy.sparse.csc_matrix(matrix)
 
-    start= time.time()
+    with open('dumps/data.pkl', 'wb') as output:
+        pickle.dump(mat.data, output)
 
-    save_sparse_csr('dumps/data', mat)
+    with open('dumps/indices.pkl', 'wb') as output:
+        pickle.dump(mat.indices, output)
 
-    stop = time.time()
-    print "Writing matrix to file took: ", stop-start, "seconds \n"
+    with open('dumps/indptr.pkl', 'wb') as output:
+        pickle.dump(mat.indptr, output)
 
-    start = time.time()
-    output = open('dumps/words.pkl', 'wb')
-    pickle.dump(setOfWords, output)
-    output.close()
-    stop = time.time()
-    print "Writing set of words to file took: ", stop-start, "seconds \n"
+    for x in dictOfThingsToDump.keys():
+        with open('dumps/' + x + '.pkl', 'wb') as output:
+            pickle.dump(dictOfThingsToDump[x], output)
 
-    start = time.time()
-    output = open('dumps/wordsMap.pkl', 'wb')
-    pickle.dump(mapOfWords, output)
-    output.close()
-
-    output = open('dumps/documentsAmount.pkl', 'wb')
-    pickle.dump(amountOfFiles, output)
-    output.close()
-    stop = time.time()
-    print "Writing map and amount of files to files took: ", stop-start, "seconds \n"
 
 if __name__ == '__main__':
 
     print "Imports done"
 
-    listOfArticleFiles =   sorted(os.listdir(directoryOfDataset))
+    listOfArticleFiles = sorted(os.listdir(directoryOfDataset))
+
 
     amountOfFiles = len(listOfArticleFiles)
 
@@ -142,12 +128,10 @@ if __name__ == '__main__':
     print "Amount of words: ", len(setOfWords), "\n"
 
     start = time.time()
-    matrix = idf(matrix, len(setOfWords), amountOfFiles,dictOfTermOccurences, listOfWords)
+    matrix, idfs = idf(matrix, len(setOfWords), amountOfFiles,dictOfTermOccurences, listOfWords)
     stop = time.time()
 
     print "idf done, took : ", stop-start, " seconds\n"
-
-
 
     start = time.time()
     matrix = normalization(matrix, amountOfFiles)
@@ -155,9 +139,14 @@ if __name__ == '__main__':
 
     print "Normalization done, took: ", stop-start, " seconds\n"
 
-
     start = time.time()
-    writeDataToFile(matrix, setOfWords, mapOfWords, amountOfFiles)
+    writeDataToFile(matrix, { "amountOfWords" : len(setOfWords),
+                              "mapOfWords" : mapOfWords,
+                              "amountOfFiles" :  amountOfFiles,
+                              "dictOfTermOccurences" : dictOfTermOccurences,
+                              "listOfArticleFiles" : listOfArticleFiles,
+                              "idfs" : idfs
+                            })
     stop = time.time()
 
     print "Writing to file done, took: ", stop - start, " seconds\n"
