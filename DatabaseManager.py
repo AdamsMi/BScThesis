@@ -33,20 +33,34 @@ class DatabaseManager(object):
         :return: True if link was added successfully, False otherwise
         """
 
-        args = (url.decode("utf-8"), title.decode("utf-8"), file_name.decode("utf-8"), )
+        args = (url.decode("utf-8").rstrip(), title.decode("utf-8").rstrip(), file_name.decode("utf-8").rstrip(), )
         c = self.db.cursor()
         try:
             c.execute("INSERT INTO news VALUES (?,?,?)", args)
-            # Commit
-            self.db.commit()
+            return True
         except sqlite3.IntegrityError:
+            return False
+        finally:
             c.close()
             self.db.commit()
-            return False
 
+    def get_link(self, file_name):
+        """
+        Returns URL address for given file
+        :param file_name: file containing news text
+        :return: URL name or None if no such file
+        """
 
-        c.close()
-        return True
+        args = (file_name.decode("utf-8"),)
+        c = self.db.cursor()
+        try:
+            file_name = c.execute("SELECT url FROM news where text_file like ?", args).fetchone()
+            return file_name
+        except:
+            return None
+        finally:
+            c.close()
+
 
     def get_connection(self):
         return self.db

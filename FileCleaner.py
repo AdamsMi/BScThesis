@@ -50,7 +50,7 @@ def structureCleaning(fileName):
     if fullLineCount<3:
         return None;
 
-    return (url, title, content)
+    return (url, title, fileName, content)
 
 
 
@@ -80,7 +80,7 @@ def cleanAllWordsFromArticles(listOfArticles, pathToArticles, lock):
             if passed:
 
                 # Save file to new file
-                write_to_file(args[2], pathToArticles + currentFileName)
+                write_to_file(args[3], pathToArticles + currentFileName)
 
                 # Open it again
                 # TODO it shouldn't be opened again
