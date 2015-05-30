@@ -1,9 +1,9 @@
 # README 
 ## Text Mining Repository ##
 
-This is a repository containing python code created for preprocessing a given dataset of articles.
-The Articles after this processing are used to create a google-like search engine for BSc thesis of Michał Adamczyk and Dominik Majda. 
-
+This is a repository containing server part of software created for preprocessing of a given set of finance-oriented articles.
+The Articles after the preprocessing are used to create a google-like search engine for BSc thesis of Michał Adamczyk and Dominik Majda. 
+Server is to be up and running by February 2016.
 
 ## Who do I talk to? ##
 
