@@ -118,22 +118,18 @@ def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
 
 def writeDataToFile(matrix, setOfWords, mapOfWords, amountOfFiles):
 
-
     mat = scipy.sparse.csc_matrix(matrix)
 
     start= time.time()
 
-    output = open('dumps/data.pkl', 'wb')
-    pickle.dump(mat.data, output)
-    output.close()
+    with open('dumps/data.pkl', 'wb') as output:
+        pickle.dump(mat.data, output)
 
-    output = open('dumps/indices.pkl', 'wb')
-    pickle.dump(mat.indices, output)
-    output.close()
+    with open('dumps/indices.pkl', 'wb') as output:
+        pickle.dump(mat.indices, output)
 
-    output = open('dumps/indptr.pkl', 'wb')
-    pickle.dump(mat.indptr, output)
-    output.close()
+    with open('dumps/indptr.pkl', 'wb') as output:
+        pickle.dump(mat.indptr, output)
 
     stop = time.time()
     print "Writing matrix to file took: ", stop-start, "seconds \n"
@@ -190,10 +186,6 @@ if __name__ == '__main__':
     stop = time.time()
 
     print "Normalization done, took: ", stop-start, " seconds\n"
-
-    start = time.time()
-    matrix = sparseLowRankAppr(matrix, RANK_OF_APPROXIMATION)
-    stop = time.time()
 
     print "Low rank appr done, took: ", stop-start, " seconds\n"
 

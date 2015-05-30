@@ -5,20 +5,35 @@ from scipy.sparse import csc_matrix, lil_matrix
 import numpy
 import time
 import os
-
+from sparsesvd import sparsesvd
 from FileCleaner import cleaningOfWord
 
 MATRIX_FILENAME = 'data.npz'
+RANK_OF_APPROXIMATION = 200
 
 def load_sparse_csc(filename):
     loader = numpy.load(filename)
     return csc_matrix((  loader['data'], loader['indices'], loader['indptr']),
                          shape = loader['shape'])
 
+
+def sparseLowRankAppr(matrix, rank):
+    #smat = csc_matrix(matrix)
+    ut, s, vt = sparsesvd(matrix, rank)
+    return numpy.dot(ut.T, numpy.dot(numpy.diag(s), vt))
+
 def loadData(directory):
-    start = time.time()
-    matrix = load_sparse_csc(directory + MATRIX_FILENAME)
-    stop = time.time()
+
+    with open(directory + 'data.pkl', 'rb') as inputFile:
+        data = pickle.load(inputFile)
+
+    inputFile = open(directory + 'indices.pkl', 'rb')
+    indices = pickle.load(inputFile)
+    inputFile.close()
+
+    inputFile = open(directory + 'indptr.pkl', 'rb')
+    indptr = pickle.load(inputFile)
+    inputFile.close()
 
     with open(directory + 'words.pkl', 'rb') as inputFile:
         setOfWords = pickle.load(inputFile)
@@ -30,7 +45,7 @@ def loadData(directory):
     with open(directory + 'documentsAmount.pkl', 'rb') as inputFile:
         amountOfFiles = pickle.load(inputFile)
 
-    return matrix, setOfWords, mapOfWords, amountOfFiles
+    return csc_matrix((data, indices, indptr)), setOfWords, mapOfWords, amountOfFiles
 
 
 #Just cleans the words from a user's query
@@ -56,13 +71,14 @@ def createBagOfWordsFromVector(vector, amountOfTerms, dictionary):
 def findCorrelations(matrix, vector, amountOfDocuments):
     similarities = []
     for x in xrange(amountOfDocuments):
-        simil = vector.dot(matrix[:, x])[0, 0]
+        simil = vector.dot(matrix[:, x])[0]
         similarities.append((x, simil))
     return sorted(similarities, key = lambda tup: tup[1], reverse=True)[:5]
 
 
 if __name__ == '__main__':
     matrix, setOfWords, dictOfWords, amountOfFiles = loadData('dumps/')
+    matrix = sparseLowRankAppr(matrix, RANK_OF_APPROXIMATION)
     print "Data loaded from files & Matrix built\n"
     vector = raw_input("Input: ").split()
 
