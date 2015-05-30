@@ -9,40 +9,10 @@ import cPickle as pickle
 import scipy
 import time
 import scipy.sparse.linalg
-from sparsesvd import sparsesvd
 
 RANK_OF_APPROXIMATION =400
 
 directoryOfDataset = 'files/'
-
-def low_rank_approx( matrix, rank):
-
-    start = time.time()
-    U, d, Vt = linalg.svd(matrix)
-    stop = time.time()
-    print "linalg.svd took: ", stop - start, " seconds\n"
-
-    start = time.time()
-    D = linalg.diagsvd(d, matrix.shape[0], matrix.shape[1])
-    stop = time.time()
-    print "linalg.diagsvd took: ", stop - start, " seconds\n"
-
-    start = time.time()
-    D1 = D.copy()
-    stop = time.time()
-    print "D.copy took: ", stop - start, " seconds\n"
-
-    start = time.time()
-    D1[D1 < d[int(rank)]] = 0.
-    stop = time.time()
-    print "Reseting small singular values took: ", stop-start, " seconds\n"
-    return  numpy.dot(numpy.dot(U, D1), Vt)
-
-def sparseLowRankAppr(matrix, rank):
-    smat = scipy.sparse.csc_matrix(matrix)
-    ut, s, vt = sparsesvd(smat, rank)
-    return numpy.dot(ut.T, numpy.dot(numpy.diag(s), vt))
-
 
 def normalization(matrix, amountOfDocuments):
     matrixSparse = scipy.sparse.csc_matrix(matrix)
@@ -60,7 +30,6 @@ def normalization(matrix, amountOfDocuments):
         matrix[firstList[cellInd], secondList[cellInd]]/=sumList[secondList[cellInd]]
 
     return matrix
-
 
 def idf(matrix, numberOfWords, numberOfArticles, dictOfTermOccurences, listOfWords):
     for x in xrange(numberOfWords):
@@ -186,11 +155,6 @@ if __name__ == '__main__':
 
     print "Normalization done, took: ", stop-start, " seconds\n"
 
-    start = time.time()
-    matrix = sparseLowRankAppr(matrix, RANK_OF_APPROXIMATION)
-    stop = time.time()
-
-    print "Low rank appr done, took: ", stop-start, " seconds\n"
 
     start = time.time()
     writeDataToFile(matrix, setOfWords, mapOfWords, amountOfFiles)
