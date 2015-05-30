@@ -9,14 +9,17 @@ from FileCleaner import cleaningOfWord
 
 MATRIX_FILENAME = 'data.npz'
 RANK_OF_APPROXIMATION = 200
+from DatabaseManager import DatabaseManager
+import webbrowser
+
 
 def sparseLowRankAppr(matrix, rank):
     #smat = csc_matrix(matrix)
     ut, s, vt = sparsesvd(matrix, rank)
     return numpy.dot(ut.T, numpy.dot(numpy.diag(s), vt))
 
-def loadData(directory):
 
+def loadData(directory):
     with open(directory + 'data.pkl', 'rb') as inputFile:
         data = pickle.load(inputFile)
 
@@ -55,26 +58,28 @@ def cleanVector(vector):
             cleanedVector.append(cleanWord)
     return cleanedVector
 
+
 def createBagOfWordsFromVector(vector, amountOfTerms, dictionary, idfs):
     bagOfWords = lil_matrix((1, amountOfTerms), dtype=float)
     for x in vector:
         try:
             ind = dictionary[x]
-            bagOfWords[0, ind]+=1
-            bagOfWords[0, ind]*=idfs[ind]
+            bagOfWords[0, ind] += 1
+            bagOfWords[0, ind] *= idfs[ind]
 
         except:
-            print "one of the words not in out dataset, that is to say: %s" %x
+            print "one of the words not in out dataset, that is to say: %s" % x
             continue
     bagOfWords = csc_matrix(bagOfWords, dtype=float)
     return bagOfWords
+
 
 def findCorrelations(matrix, vector, amountOfDocuments):
     similarities = []
     for x in xrange(amountOfDocuments):
         simil = vector.dot(matrix[:, x])[0]
         similarities.append((x, simil))
-    return sorted(similarities, key = lambda tup: tup[1], reverse=True)[:5]
+    return sorted(similarities, key=lambda tup: tup[1], reverse=True)[:5]
 
 
 if __name__ == '__main__':
@@ -83,15 +88,16 @@ if __name__ == '__main__':
     print "Data loaded from files & Matrix built\n"
     vector = raw_input("Input: ").split()
 
-    cleanedVect =  cleanVector(vector)
+    cleanedVect = cleanVector(vector)
 
     bagOfWords = createBagOfWordsFromVector(cleanedVect, amountOfWords, dictOfWords, idfs)
 
     a = findCorrelations(matrix, bagOfWords, amountOfFiles)
 
-
+    dbMan = DatabaseManager()
 
     for x in a:
-        print listOfArticles[x[0]]
+        webbrowser.open(dbMan.get_link(listOfArticles[x[0]])[0])
+
 
 
