@@ -15,35 +15,6 @@ RANK_OF_APPROXIMATION =100
 
 directoryOfDataset = 'files/'
 
-def low_rank_approx( matrix, rank):
-
-    start = time.time()
-    U, d, Vt = linalg.svd(matrix)
-    stop = time.time()
-    print "linalg.svd took: ", stop - start, " seconds\n"
-
-    start = time.time()
-    D = linalg.diagsvd(d, matrix.shape[0], matrix.shape[1])
-    stop = time.time()
-    print "linalg.diagsvd took: ", stop - start, " seconds\n"
-
-    start = time.time()
-    D1 = D.copy()
-    stop = time.time()
-    print "D.copy took: ", stop - start, " seconds\n"
-
-    start = time.time()
-    D1[D1 < d[int(rank)]] = 0.
-    stop = time.time()
-    print "Reseting small singular values took: ", stop-start, " seconds\n"
-    return  numpy.dot(numpy.dot(U, D1), Vt)
-
-def sparseLowRankAppr(matrix, rank):
-    smat = scipy.sparse.csc_matrix(matrix)
-    ut, s, vt = sparsesvd(smat, rank)
-    return numpy.dot(ut.T, numpy.dot(numpy.diag(s), vt))
-
-
 def normalization(matrix, amountOfDocuments):
     matrixSparse = scipy.sparse.csc_matrix(matrix)
 
@@ -63,11 +34,13 @@ def normalization(matrix, amountOfDocuments):
 
 
 def idf(matrix, numberOfWords, numberOfArticles, dictOfTermOccurences, listOfWords):
+    idfs = []
     for x in xrange(numberOfWords):
         amountOfDocumentsWithGivenTerm = dictOfTermOccurences[listOfWords[x]]
         idf = math.log(float(numberOfArticles)/float(amountOfDocumentsWithGivenTerm), 10)
         matrix[x,:]*=idf
-    return matrix
+        idfs.append(idf)
+    return matrix, idfs
 
 def createDictionaryForWordIndexes(wordsSet):
     dictionaryInProgress = dict()
@@ -116,11 +89,9 @@ def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
 
     return words, dictOfWords, matrix, dictOfTermOccurences, mapOfWords
 
-def writeDataToFile(matrix, setOfWords, mapOfWords, amountOfFiles):
+def writeDataToFile(matrix, dictOfThingsToDump):
 
     mat = scipy.sparse.csc_matrix(matrix)
-
-    start= time.time()
 
     with open('dumps/data.pkl', 'wb') as output:
         pickle.dump(mat.data, output)
@@ -131,32 +102,16 @@ def writeDataToFile(matrix, setOfWords, mapOfWords, amountOfFiles):
     with open('dumps/indptr.pkl', 'wb') as output:
         pickle.dump(mat.indptr, output)
 
-    stop = time.time()
-    print "Writing matrix to file took: ", stop-start, "seconds \n"
+    for x in dictOfThingsToDump.keys():
+        with open('dumps/' + x + '.pkl', 'wb') as output:
+            pickle.dump(dictOfThingsToDump[x], output)
 
-    start = time.time()
-    output = open('dumps/words.pkl', 'wb')
-    pickle.dump(setOfWords, output)
-    output.close()
-    stop = time.time()
-    print "Writing set of words to file took: ", stop-start, "seconds \n"
-
-    start = time.time()
-    output = open('dumps/wordsMap.pkl', 'wb')
-    pickle.dump(mapOfWords, output)
-    output.close()
-
-    output = open('dumps/documentsAmount.pkl', 'wb')
-    pickle.dump(amountOfFiles, output)
-    output.close()
-    stop = time.time()
-    print "Writing map and amount of files to files took: ", stop-start, "seconds \n"
 
 if __name__ == '__main__':
 
     print "Imports done"
 
-    listOfArticleFiles =   sorted(os.listdir(directoryOfDataset))[:500]
+    listOfArticleFiles = sorted(os.listdir(directoryOfDataset))
 
     amountOfFiles = len(listOfArticleFiles)
 
@@ -174,12 +129,10 @@ if __name__ == '__main__':
     print "Amount of words: ", len(setOfWords), "\n"
 
     start = time.time()
-    matrix = idf(matrix, len(setOfWords), amountOfFiles,dictOfTermOccurences, listOfWords)
+    matrix, idfs = idf(matrix, len(setOfWords), amountOfFiles,dictOfTermOccurences, listOfWords)
     stop = time.time()
 
     print "idf done, took : ", stop-start, " seconds\n"
-
-
 
     start = time.time()
     matrix = normalization(matrix, amountOfFiles)
@@ -187,10 +140,14 @@ if __name__ == '__main__':
 
     print "Normalization done, took: ", stop-start, " seconds\n"
 
-    print "Low rank appr done, took: ", stop-start, " seconds\n"
-
     start = time.time()
-    writeDataToFile(matrix, setOfWords, mapOfWords, amountOfFiles)
+    writeDataToFile(matrix, { "amountOfWords" : len(setOfWords),
+                              "mapOfWords" : mapOfWords,
+                              "amountOfFiles" :  amountOfFiles,
+                              "dictOfTermOccurences" : dictOfTermOccurences,
+                              "listOfArticleFiles" : listOfArticleFiles,
+                              "idfs" : idfs
+                            })
     stop = time.time()
 
     print "Writing to file done, took: ", stop - start, " seconds\n"
