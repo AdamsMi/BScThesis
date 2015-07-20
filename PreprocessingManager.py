@@ -4,17 +4,24 @@ import os
 import numpy
 import sys
 import math
-from scipy import linalg
 import cPickle as pickle
 import scipy
 import time
 import scipy.sparse.linalg
 
 RANK_OF_APPROXIMATION =400
+NUMBER_OF_ARTICLES = 6000
 
-directoryOfDataset = 'files/'
+DIR = 'fil/files/'
 
 def normalization(matrix, amountOfDocuments):
+    """
+    Function applying normalization to the main matrix
+    :param matrix: s.e.
+    :param amountOfDocuments:s.e.
+    :return: modified matrix
+    """
+
     matrixSparse = scipy.sparse.csc_matrix(matrix)
 
     nonzeroIndices = matrixSparse.nonzero()
@@ -26,68 +33,90 @@ def normalization(matrix, amountOfDocuments):
     for cellIndex in xrange(amountOfNonZeroCells):
         sumList[secondList[cellIndex]]+=matrix[firstList[cellIndex], secondList[cellIndex]]**2
 
+    for x in xrange(len(sumList)):
+        sumList[x] = math.sqrt(sumList[x])
+
     for cellInd in xrange(amountOfNonZeroCells):
         matrix[firstList[cellInd], secondList[cellInd]]/=sumList[secondList[cellInd]]
 
+
     return matrix
 
-def idf(matrix, numberOfWords, numberOfArticles, dictOfTermOccurences, listOfWords):
+def idf(matrix, numberOfArticles, dictOfTermOccurrences, listOfWords):
+    """
+    Function applying idf to the main matrix.
+    :param matrix: the main matrix
+    :param numberOfArticles: s.e.
+    :param dictOfTermOccurrences: mapping (term) -> (amounfOfDocsWithTerm)
+    :param listOfWords: all words
+    :return: modified matrix, list of idf values
+    """
+
     idfs = []
-    for x in xrange(numberOfWords):
-        amountOfDocumentsWithGivenTerm = dictOfTermOccurences[listOfWords[x]]
+    for x in xrange(len(listOfWords)):
+        amountOfDocumentsWithGivenTerm = dictOfTermOccurrences[listOfWords[x]]
         idf = math.log(float(numberOfArticles)/float(amountOfDocumentsWithGivenTerm), 10)
         matrix[x,:]*=idf
         idfs.append(idf)
     return matrix, idfs
 
-def createDictionaryForWordIndexes(wordsSet):
-    dictionaryInProgress = dict()
-    for x in xrange(len(wordsSet)):
-        dictionaryInProgress[wordsSet[x]] = x
-
-    return dictionaryInProgress
 
 def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
+    """
+    Gather all words from a given list of articles.
+    Opened files format: [pathToArticles + x for x in listOfArticles]
+
+    :param listOfArticles: list of article names
+    :param pathToArticles: directory with articles
+    :return:    words - set of all words,
+                dictOfWords - mapping (word) -> (word's id)
+                matrix - bag of words
+                dictOfTermOccurrences -
+    """
+
     wordAmount = 0
     words = set()
     dictOfWords = dict()
-    dictOfTermOccurences = dict()
+    dictOfTermOccurrences = dict()
 
-    workingListOfOccurences = []
+    workingListOfOccurrences = []
     mapOfWords = []
 
     for currentFileName in listOfArticles:
-        currentFile = open(pathToArticles + currentFileName)
-        indexesOfWordsInCurrentFile = []
-        for line in currentFile:
-            for word in line.split():
-                    if word in words:
-                        indexesOfWordsInCurrentFile.append(dictOfWords[word])
+        with open(pathToArticles + currentFileName) as currentFile:
+            indexesOfWordsInCurrentFile = []
+            for line in currentFile:
+                for word in line.split():
+                        if word in words:
+                            indexesOfWordsInCurrentFile.append(dictOfWords[word])
 
-                    else:
-                        dictOfTermOccurences[word] = 0
-                        words.add(word)
-                        dictOfWords[word] = wordAmount
-                        mapOfWords.append(word)
-                        indexesOfWordsInCurrentFile.append(wordAmount)
-                        wordAmount+=1
+                        else:
+                            dictOfTermOccurrences[word] = 0
+                            words.add(word)
+                            dictOfWords[word] = wordAmount
+                            mapOfWords.append(word)
+                            indexesOfWordsInCurrentFile.append(wordAmount)
+                            wordAmount+=1
 
-        workingListOfOccurences.append(indexesOfWordsInCurrentFile)
-        currentFile.close()
+            workingListOfOccurrences.append(indexesOfWordsInCurrentFile)
+
 
     matrix = numpy.zeros((len(words), len(listOfArticles)), float)
 
-    for x in xrange(len(workingListOfOccurences)):
-        for index in workingListOfOccurences[x]:
+    for x in xrange(len(workingListOfOccurrences)):
+        for index in workingListOfOccurrences[x]:
             matrix[index,x]+=1
-        wordsInDocument = set(workingListOfOccurences[x])
-        for x in wordsInDocument:
-            dictOfTermOccurences[mapOfWords[x]]+=1
+            dictOfTermOccurrences[mapOfWords[x]]+=1
 
 
-    return words, dictOfWords, matrix, dictOfTermOccurences, mapOfWords
+    return words, dictOfWords, matrix, dictOfTermOccurrences, mapOfWords
 
 def writeDataToFile(matrix, dictOfThingsToDump):
+    """
+
+    :param matrix: the main matrix
+    :param dictOfThingsToDump: mapping (nameOfFileToWrite) -> (content)
+    """
 
     mat = scipy.sparse.csc_matrix(matrix)
 
@@ -109,7 +138,7 @@ if __name__ == '__main__':
 
     print "Imports done"
 
-    listOfArticleFiles = sorted(os.listdir(directoryOfDataset))
+    listOfArticleFiles = filter(lambda x: x[0] != '.',sorted(os.listdir(DIR)))[:NUMBER_OF_ARTICLES]
 
 
     amountOfFiles = len(listOfArticleFiles)
@@ -121,14 +150,14 @@ if __name__ == '__main__':
         sys.exit("Wrong content of directory to be processed")
 
     start = time.time()
-    setOfWords , mapOfWords, matrix, dictOfTermOccurences, listOfWords= gatherAllWordsFromArticles(listOfArticleFiles, directoryOfDataset)
+    setOfWords , mapOfWords, matrix, dictOfTermOccurrences, listOfWords= gatherAllWordsFromArticles(listOfArticleFiles, DIR)
     stop = time.time()
 
     print "Gathering words done, took: ", stop-start, " seconds\n"
     print "Amount of words: ", len(setOfWords), "\n"
 
     start = time.time()
-    matrix, idfs = idf(matrix, len(setOfWords), amountOfFiles,dictOfTermOccurences, listOfWords)
+    matrix, idfs = idf(matrix, amountOfFiles,dictOfTermOccurrences, listOfWords)
     stop = time.time()
 
     print "idf done, took : ", stop-start, " seconds\n"
@@ -143,11 +172,13 @@ if __name__ == '__main__':
     writeDataToFile(matrix, { "amountOfWords" : len(setOfWords),
                               "mapOfWords" : mapOfWords,
                               "amountOfFiles" :  amountOfFiles,
-                              "dictOfTermOccurences" : dictOfTermOccurences,
+                              "dictOfTermOccurrences" : dictOfTermOccurrences,
                               "listOfArticleFiles" : listOfArticleFiles,
                               "idfs" : idfs
                             })
     stop = time.time()
 
     print "Writing to file done, took: ", stop - start, " seconds\n"
+
+
 
