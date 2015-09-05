@@ -1,11 +1,14 @@
-from nltk.stem.snowball import SnowballStemmer
-from nltk.corpus import stopwords
-from DatabaseManager import DatabaseManager
 import re
 import os
 import multiprocessing
 import time
 import sqlite3
+
+from nltk.stem.snowball import SnowballStemmer
+from nltk.corpus import stopwords
+
+from code import DatabaseManager
+
 
 stemmer = SnowballStemmer('english')
 directoryOfDataset = 'files/'
