@@ -9,10 +9,11 @@ import scipy
 import time
 import scipy.sparse.linalg
 
-RANK_OF_APPROXIMATION =400
-NUMBER_OF_ARTICLES = 6000
+RANK_OF_APPROXIMATION = 400
+NUMBER_OF_ARTICLES = 10000
 
-DIR = 'fil/files/'
+DIR = '../files/'
+DUMPS_DIR = '../dumps/'
 
 def normalization(matrix, amountOfDocuments):
     """
@@ -120,17 +121,17 @@ def writeDataToFile(matrix, dictOfThingsToDump):
 
     mat = scipy.sparse.csc_matrix(matrix)
 
-    with open('dumps/data.pkl', 'wb') as output:
+    with open(DUMPS_DIR + 'data.pkl', 'wb') as output:
         pickle.dump(mat.data, output)
 
-    with open('dumps/indices.pkl', 'wb') as output:
+    with open(DUMPS_DIR + 'indices.pkl', 'wb') as output:
         pickle.dump(mat.indices, output)
 
-    with open('dumps/indptr.pkl', 'wb') as output:
+    with open(DUMPS_DIR + 'indptr.pkl', 'wb') as output:
         pickle.dump(mat.indptr, output)
 
     for x in dictOfThingsToDump.keys():
-        with open('dumps/' + x + '.pkl', 'wb') as output:
+        with open(DUMPS_DIR + x + '.pkl', 'wb') as output:
             pickle.dump(dictOfThingsToDump[x], output)
 
 
@@ -160,7 +161,7 @@ if __name__ == '__main__':
     matrix, idfs = idf(matrix, amountOfFiles,dictOfTermOccurrences, listOfWords)
     stop = time.time()
 
-    print "idf done, took : ", stop-start, " seconds\n"
+    print "IDF done, took : ", stop-start, " seconds\n"
 
     start = time.time()
     matrix = normalization(matrix, amountOfFiles)
