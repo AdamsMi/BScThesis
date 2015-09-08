@@ -1,5 +1,10 @@
 /files/*
 *.zip
 *.db
+*.tar
+*.gz
+*.gz2
+/dumps/
+/dumps2/
 .DS_Store
 /.idea/*
