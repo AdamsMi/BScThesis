@@ -1,4 +1,4 @@
-from code import PreprocessingManager
+from source import preprocessing_manager
 
 __author__ = 'Michal'
 
@@ -16,7 +16,7 @@ class TestPreprocessing(unittest.TestCase):
     def test_normalization(self):
         import numpy as np
         mat = np.random.rand(6,6)
-        mat = PreprocessingManager.normalization(mat, 6)
+        mat = preprocessing_manager.normalization(mat, 6)
         print mat
         for i in xrange(6):
             diff = abs( sum(mat[:,i]**2) - 1)
@@ -46,13 +46,13 @@ class TestPreprocessing(unittest.TestCase):
             [0.0, 3.0]
         ])
 
-        outcM, outcIdfs =  PreprocessingManager.idf(matr, articlesNr, occDict, wordList)
+        outcM, outcIdfs =  preprocessing_manager.idf(matr, articlesNr, occDict, wordList)
         self.assertTrue(np.allclose(outcM, [[0,0],[0,0],[0.6020599,0],[0.30103,0],[0,0.6020599],[0,0.9030899]]))
 
 
 
 def test_gatherAllWords():
-    words, dictOfWords, matrix, dictOfTermOccurrences, mapOfWords = PreprocessingManager.gatherAllWordsFromArticles( ['file', 'file2'], './testfiles')
+    words, dictOfWords, matrix, dictOfTermOccurrences, mapOfWords = preprocessing_manager.gatherAllWordsFromArticles( ['file', 'file2'], './testfiles')
     print 'words', words
     print 'dictOfWords', dictOfWords
     print 'matrix', matrix

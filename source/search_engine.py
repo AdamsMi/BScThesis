@@ -1,23 +1,22 @@
-from code import DatabaseManager
 
 __author__ = 'Michal'
 
 import pickle
-from sparsesvd import sparsesvd
-
-from scipy.sparse import csc_matrix, lil_matrix
-import numpy
-
-from code.FileCleaner import cleaningOfWord
-
-
-MATRIX_FILENAME = 'data.npz'
-RANK_OF_APPROXIMATION = 200
-import webbrowser
 import time
+import numpy
+import webbrowser
+
+
+from source.database_manager import DatabaseManager
+from sparsesvd import sparsesvd
+from scipy.sparse import csc_matrix, lil_matrix
+from source.file_cleaner import cleaningOfWord
+from search_config import RANK_OF_APPROXIMATION
+
+from search_config import DIR_DUMPS
+
 
 def sparseLowRankAppr(matrix, rank):
-    #matrix = csc_matrix(matrix)
     ut, s, vt = sparsesvd(matrix, rank)
     print len(ut[0])
     print len(ut)
@@ -54,7 +53,6 @@ def loadData(directory):
     return csc_matrix((data, indices, indptr)), amountOfWords, mapOfWords, amountOfFiles, listOfArticleFiles, idfs
 
 
-#Just cleans the words from a user's query
 def cleanVector(vector):
     cleanedVector = []
     for word in vector:
@@ -98,7 +96,7 @@ def fasterCorrelations(matrix, indices, vector,  amountOfDocuments):
     return sorted(similarities, key=lambda tup: tup[1], reverse=True)[:5]
 
 if __name__ == '__main__':
-    matrix, amountOfWords, dictOfWords, amountOfFiles, listOfArticles, idfs = loadData('dumps/')
+    matrix, amountOfWords, dictOfWords, amountOfFiles, listOfArticles, idfs = loadData(DIR_DUMPS)
     matrix = sparseLowRankAppr(matrix, RANK_OF_APPROXIMATION)
     print "Data loaded from files & Matrix built\n"
 

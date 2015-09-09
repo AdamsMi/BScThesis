@@ -7,12 +7,12 @@ import sqlite3
 from nltk.stem.snowball import SnowballStemmer
 from nltk.corpus import stopwords
 
-from code import DatabaseManager
+from database_manager import DatabaseManager
 
+from search_config import DIR_FILES, directoryOfDump
 
 stemmer = SnowballStemmer('english')
-directoryOfDataset = 'files/'
-directoryOfDump = 'crawlers/dump/'
+
 
 def write_to_file(content, new_file_name):
     new_file = open(new_file_name, 'w')
@@ -125,12 +125,13 @@ if __name__ == "__main__":
     # Commit
     db.commit()
 
-    listOfArticles = os.listdir(directoryOfDump)
+    listOfArticles = filter(lambda x: x[0] != '.',sorted(os.listdir(directoryOfDump)))
+
     lock = multiprocessing.Lock()
     processes = []
 
     for chunk in chunks(listOfArticles, 2):
-        process = multiprocessing.Process(target=cleanAllWordsFromArticles, args=(chunk, directoryOfDataset, lock))
+        process = multiprocessing.Process(target=cleanAllWordsFromArticles, args=(chunk, DIR_FILES, lock))
         processes.append(process)
         process.start()
 

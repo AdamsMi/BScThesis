@@ -9,11 +9,8 @@ import scipy
 import time
 import scipy.sparse.linalg
 
-RANK_OF_APPROXIMATION = 400
-NUMBER_OF_ARTICLES = 10000
+from search_config import NUMBER_OF_ARTICLES, DIR_DUMPS, DIR_FILES
 
-DIR = '../files/'
-DUMPS_DIR = '../dumps/'
 
 def normalization(matrix, amountOfDocuments):
     """
@@ -121,17 +118,17 @@ def writeDataToFile(matrix, dictOfThingsToDump):
 
     mat = scipy.sparse.csc_matrix(matrix)
 
-    with open(DUMPS_DIR + 'data.pkl', 'wb') as output:
+    with open(DIR_DUMPS + 'data.pkl', 'wb') as output:
         pickle.dump(mat.data, output)
 
-    with open(DUMPS_DIR + 'indices.pkl', 'wb') as output:
+    with open(DIR_DUMPS + 'indices.pkl', 'wb') as output:
         pickle.dump(mat.indices, output)
 
-    with open(DUMPS_DIR + 'indptr.pkl', 'wb') as output:
+    with open(DIR_DUMPS + 'indptr.pkl', 'wb') as output:
         pickle.dump(mat.indptr, output)
 
     for x in dictOfThingsToDump.keys():
-        with open(DUMPS_DIR + x + '.pkl', 'wb') as output:
+        with open(DIR_DUMPS + x + '.pkl', 'wb') as output:
             pickle.dump(dictOfThingsToDump[x], output)
 
 
@@ -139,7 +136,7 @@ if __name__ == '__main__':
 
     print "Imports done"
 
-    listOfArticleFiles = filter(lambda x: x[0] != '.',sorted(os.listdir(DIR)))[:NUMBER_OF_ARTICLES]
+    listOfArticleFiles = filter(lambda x: x[0] != '.',sorted(os.listdir(DIR_FILES)))[:NUMBER_OF_ARTICLES]
 
 
     amountOfFiles = len(listOfArticleFiles)
@@ -151,7 +148,7 @@ if __name__ == '__main__':
         sys.exit("Wrong content of directory to be processed")
 
     start = time.time()
-    setOfWords , mapOfWords, matrix, dictOfTermOccurrences, listOfWords= gatherAllWordsFromArticles(listOfArticleFiles, DIR)
+    setOfWords , mapOfWords, matrix, dictOfTermOccurrences, listOfWords= gatherAllWordsFromArticles(listOfArticleFiles, DIR_FILES)
     stop = time.time()
 
     print "Gathering words done, took: ", stop-start, " seconds\n"
