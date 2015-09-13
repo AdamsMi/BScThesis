@@ -14,14 +14,14 @@
                 <rect key="frame" x="0.0" y="0.0" width="320" height="43"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="thestreet" translatesAutoresizingMaskIntoConstraints="NO" id="Dmc-ip-EjN">
+                    <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Dmc-ip-EjN">
                         <rect key="frame" x="0.0" y="0.0" width="65" height="65"/>
                         <constraints>
                             <constraint firstAttribute="height" constant="65" id="QiZ-BK-VnD"/>
                             <constraint firstAttribute="width" constant="65" id="fgT-Nf-hKN"/>
                         </constraints>
                     </imageView>
-                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="This is a title for a super article. Don't you think so?" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="VZq-bx-IyY">
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="VZq-bx-IyY">
                         <rect key="frame" x="90" y="8" width="347" height="49"/>
                         <fontDescription key="fontDescription" type="system" pointSize="15"/>
                         <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
@@ -59,10 +59,7 @@
                 <outlet property="newsImageView" destination="Dmc-ip-EjN" id="w8P-TZ-q0h"/>
                 <outlet property="newsTitleLabel" destination="VZq-bx-IyY" id="cOG-ZH-IPe"/>
             </connections>
-            <point key="canvasLocation" x="170.5" y="299.5"/>
+            <point key="canvasLocation" x="276.5" y="421"/>
         </tableViewCell>
     </objects>
-    <resources>
-        <image name="thestreet" width="100" height="40"/>
-    </resources>
 </document>

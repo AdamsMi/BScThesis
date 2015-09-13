@@ -16,6 +16,8 @@
 		F90F36061B85086800DF685B /* NewsTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = F90F36041B85086800DF685B /* NewsTableViewCell.swift */; };
 		F90F36071B85086800DF685B /* NewsTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = F90F36051B85086800DF685B /* NewsTableViewCell.xib */; };
 		F90F360A1B85101300DF685B /* News.swift in Sources */ = {isa = PBXBuildFile; fileRef = F90F36091B85101300DF685B /* News.swift */; };
+		F91C49021BA5C702003A5105 /* SearchMethod.swift in Sources */ = {isa = PBXBuildFile; fileRef = F91C49011BA5C702003A5105 /* SearchMethod.swift */; };
+		F91C49041BA5CD27003A5105 /* SearchResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = F91C49031BA5CD27003A5105 /* SearchResponse.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,6 +44,8 @@
 		F90F36041B85086800DF685B /* NewsTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NewsTableViewCell.swift; sourceTree = "<group>"; };
 		F90F36051B85086800DF685B /* NewsTableViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = NewsTableViewCell.xib; sourceTree = "<group>"; };
 		F90F36091B85101300DF685B /* News.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = News.swift; sourceTree = "<group>"; };
+		F91C49011BA5C702003A5105 /* SearchMethod.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchMethod.swift; sourceTree = "<group>"; };
+		F91C49031BA5CD27003A5105 /* SearchResponse.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchResponse.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -83,6 +87,7 @@
 		F90F35DF1B84F6B000DF685B /* $earch */ = {
 			isa = PBXGroup;
 			children = (
+				F91C49001BA5C6AB003A5105 /* API */,
 				F90F36081B850FEF00DF685B /* Model */,
 				F90F36031B85084200DF685B /* ViewController */,
 				F90F36021B85083A00DF685B /* View */,
@@ -141,8 +146,17 @@
 			isa = PBXGroup;
 			children = (
 				F90F36091B85101300DF685B /* News.swift */,
+				F91C49031BA5CD27003A5105 /* SearchResponse.swift */,
 			);
 			name = Model;
+			sourceTree = "<group>";
+		};
+		F91C49001BA5C6AB003A5105 /* API */ = {
+			isa = PBXGroup;
+			children = (
+				F91C49011BA5C702003A5105 /* SearchMethod.swift */,
+			);
+			name = API;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -246,7 +260,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F91C49021BA5C702003A5105 /* SearchMethod.swift in Sources */,
 				F90F35E51B84F6B000DF685B /* ViewController.swift in Sources */,
+				F91C49041BA5CD27003A5105 /* SearchResponse.swift in Sources */,
 				F90F35E31B84F6B000DF685B /* AppDelegate.swift in Sources */,
 				F90F360A1B85101300DF685B /* News.swift in Sources */,
 				F90F36061B85086800DF685B /* NewsTableViewCell.swift in Sources */,
@@ -447,6 +463,7 @@
 				F90F35FE1B84F6B000DF685B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		F90F35FF1B84F6B000DF685B /* Build configuration list for PBXNativeTarget "$earchTests" */ = {
 			isa = XCConfigurationList;
@@ -455,6 +472,7 @@
 				F90F36011B84F6B000DF685B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

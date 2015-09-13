@@ -4,6 +4,18 @@ import sqlite3
 
 from search_config import DIR_DATABASE
 
+class News(object):
+
+    def __init__(self, url, title):
+        self.title = title
+        self.url = url
+
+    def serialize(self):
+        return {
+            "title": self.title,
+            "url": self.url
+        }
+
 class DatabaseManager(object):
 
     def __init__(self):
@@ -49,14 +61,14 @@ class DatabaseManager(object):
         """
         Returns URL address for given file
         :param file_name: file containing news text
-        :return: URL name or None if no such file
+        :return: News with URL name and title or None if no such file
         """
 
         args = (file_name.decode("utf-8"),)
         c = self.db.cursor()
         try:
-            file_name = c.execute("SELECT url FROM news where text_file like ?", args).fetchone()
-            return file_name
+            row = c.execute("SELECT url,title FROM news where text_file like ?", args).fetchone()
+            return News(row[0],row[1])
         except:
             return None
         finally:

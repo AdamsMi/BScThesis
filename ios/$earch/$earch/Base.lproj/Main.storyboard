@@ -23,7 +23,10 @@
                                     <constraint firstAttribute="height" constant="30" id="YQt-Ne-Ddy"/>
                                 </constraints>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits"/>
+                                <textInputTraits key="textInputTraits" autocorrectionType="no" spellCheckingType="no" returnKeyType="search"/>
+                                <connections>
+                                    <outlet property="delegate" destination="BYZ-38-t0r" id="GL1-3O-zwO"/>
+                                </connections>
                             </textField>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Zjc-ft-biU">
                                 <rect key="frame" x="0.0" y="75" width="600" height="1"/>

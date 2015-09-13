@@ -1,6 +1,6 @@
 import UIKit
 
-class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UITextFieldDelegate {
 
     // MARK: - Outlets
     
@@ -8,14 +8,18 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     
     // MARK: - Properties
     
-    var newsArray: [News]?
+    var newsArray: [News]
     
+    
+    required init(coder aDecoder: NSCoder) {
+        newsArray = []
+        super.init(coder: aDecoder)
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         registerNib()
-        newsArray = NewsGenerator.generateNews()
         
     }
 
@@ -28,16 +32,16 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     
     private func registerNib() {
         let nibName = UINib(nibName: "NewsTableViewCell", bundle:nil)
-        self.newsTableView.registerNib(nibName, forCellReuseIdentifier: NewsTableViewCell.cellIdentfier())
+        newsTableView.registerNib(nibName, forCellReuseIdentifier: NewsTableViewCell.cellIdentfier())
     }
     
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 30;
+        return self.newsArray.count
     }
     
     func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
-        return 71;
+        return 71
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
@@ -45,13 +49,34 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         let cell = tableView.dequeueReusableCellWithIdentifier(
             NewsTableViewCell.cellIdentfier(), forIndexPath: indexPath) as! NewsTableViewCell
         
-        if let news = self.newsArray {
-            let singleNews = news[indexPath.row]
-            cell.initWithNews(singleNews)
-        }
+        let singleNews = newsArray[indexPath.row]
+        cell.initWithNews(singleNews)
         
         return cell;
     }
-
+    
+    // MARK: - TextField Methods
+    
+    func textFieldShouldReturn(textField: UITextField) -> Bool {
+        let queryText = textField.text
+        textField.resignFirstResponder()
+        
+        searchResultsWithQuery(queryText)
+        
+        return true;
+    }
+    
+    // MARK: - API Methods
+    
+    private func searchResultsWithQuery(query: String) {
+        SearchMethod.searchWithString(query: query) { (response) -> () in
+            if response.isResponseOK() {
+                self.newsArray = response.newsArray
+                self.newsTableView.reloadData()
+            }
+        }
+        
+    }
+    
 }
 

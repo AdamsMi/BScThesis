@@ -14,7 +14,11 @@ searchClient = SearchClient()
 def data():
     query = request.args.get('query')
     result, queryTime = searchClient.search(query)
-    return jsonify({"status": "OK", "result":result, "query_time":queryTime})
+    return jsonify({
+        "status": "OK",
+        "result":[news.serialize() for news in result],
+        "query_time":queryTime
+    })
 
 if __name__ == '__main__':
     app.run(debug=True, host=HOST, port=PORT)

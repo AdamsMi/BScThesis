@@ -35,6 +35,8 @@ class NewsTableViewCell: UITableViewCell {
         case .ROUTERS:
             self.newsImageView.image = UIImage(named: "routers")
             break
+        case .UNDEFINED:
+            break
         }
     }
     

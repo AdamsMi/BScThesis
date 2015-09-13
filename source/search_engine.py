@@ -116,7 +116,7 @@ class SearchClient(object):
         dbMan = DatabaseManager()
         results = []
         for x in b:
-            results.append(dbMan.get_link(self.listOfArticles[x[0]])[0])
+            results.append(dbMan.get_link(self.listOfArticles[x[0]]))
         stop = time.time()
 
         # Return response dictionary
@@ -129,8 +129,8 @@ if __name__ == '__main__':
     while (True):
         results, timeOfQuery = searchClient.search(raw_input("Input: "))
 
-        for webSite in results:
-            webbrowser.open(webSite)
+        for news in results:
+            webbrowser.open(news.url)
 
 
 
