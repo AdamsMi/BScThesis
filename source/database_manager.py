@@ -1,7 +1,8 @@
 __author__ = 'Dominik'
 
-
 import sqlite3
+
+from search_config import DIR_DATABASE
 
 class DatabaseManager(object):
 
@@ -10,7 +11,7 @@ class DatabaseManager(object):
         Creates database and table if not exists
         """
 
-        self.db = sqlite3.connect("news.db")
+        self.db = sqlite3.connect(DIR_DATABASE + "news.db")
         self.c = self.db.cursor()
 
         # Create table if not exists

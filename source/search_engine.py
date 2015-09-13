@@ -13,7 +13,7 @@ from scipy.sparse import csc_matrix, lil_matrix
 from source.file_cleaner import cleaningOfWord
 from search_config import RANK_OF_APPROXIMATION
 
-from search_config import DIR_DUMPS
+from search_config import DIR_MATRIX
 
 
 def sparseLowRankAppr(matrix, rank):
@@ -96,7 +96,7 @@ def fasterCorrelations(matrix, indices, vector,  amountOfDocuments):
     return sorted(similarities, key=lambda tup: tup[1], reverse=True)[:5]
 
 if __name__ == '__main__':
-    matrix, amountOfWords, dictOfWords, amountOfFiles, listOfArticles, idfs = loadData(DIR_DUMPS)
+    matrix, amountOfWords, dictOfWords, amountOfFiles, listOfArticles, idfs = loadData(DIR_MATRIX)
     matrix = sparseLowRankAppr(matrix, RANK_OF_APPROXIMATION)
     print "Data loaded from files & Matrix built\n"
 

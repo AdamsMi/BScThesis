@@ -9,7 +9,7 @@ from nltk.corpus import stopwords
 
 from database_manager import DatabaseManager
 
-from search_config import DIR_FILES, directoryOfDump
+from search_config import DIR_FILES, DIR_DUMP, DIR_DATABASE
 
 stemmer = SnowballStemmer('english')
 
@@ -26,7 +26,7 @@ def chunks(l, n):
     yield l[n*newn-newn:]
 
 def structureCleaning(fileName):
-    news = open(directoryOfDump + fileName, 'r')
+    news = open(DIR_DUMP + fileName, 'r')
     lineNr = 0
     fullLineCount = 0;
     url = ""; title = "";
@@ -106,7 +106,7 @@ def cleanAllWordsFromArticles(listOfArticles, pathToArticles, lock):
                 print "Duplicate file: " + currentFileName
         else:
             print "Wrong structure, denied file: " + currentFileName
-            os.remove(directoryOfDump + currentFileName)
+            os.remove(DIR_DUMP + currentFileName)
 
     return len(listOfArticles)
 
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     start = time.time()
 
 
-    db = sqlite3.connect("news.db")
+    db = sqlite3.connect(DIR_DATABASE + "news.db")
     c = db.cursor()
 
     # Create table if not exists
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     # Commit
     db.commit()
 
-    listOfArticles = filter(lambda x: x[0] != '.',sorted(os.listdir(directoryOfDump)))
+    listOfArticles = filter(lambda x: x[0] != '.',sorted(os.listdir(DIR_DUMP)))
 
     lock = multiprocessing.Lock()
     processes = []

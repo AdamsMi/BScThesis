@@ -9,8 +9,7 @@ import scipy
 import time
 import scipy.sparse.linalg
 
-from search_config import NUMBER_OF_ARTICLES, DIR_DUMPS, DIR_FILES
-
+from search_config import NUMBER_OF_ARTICLES, DIR_MATRIX, DIR_FILES
 
 def normalization(matrix, amountOfDocuments):
     """
@@ -118,17 +117,17 @@ def writeDataToFile(matrix, dictOfThingsToDump):
 
     mat = scipy.sparse.csc_matrix(matrix)
 
-    with open(DIR_DUMPS + 'data.pkl', 'wb') as output:
+    with open(DIR_MATRIX + 'data.pkl', 'wb') as output:
         pickle.dump(mat.data, output)
 
-    with open(DIR_DUMPS + 'indices.pkl', 'wb') as output:
+    with open(DIR_MATRIX + 'indices.pkl', 'wb') as output:
         pickle.dump(mat.indices, output)
 
-    with open(DIR_DUMPS + 'indptr.pkl', 'wb') as output:
+    with open(DIR_MATRIX + 'indptr.pkl', 'wb') as output:
         pickle.dump(mat.indptr, output)
 
     for x in dictOfThingsToDump.keys():
-        with open(DIR_DUMPS + x + '.pkl', 'wb') as output:
+        with open(DIR_MATRIX + x + '.pkl', 'wb') as output:
             pickle.dump(dictOfThingsToDump[x], output)
 
 
