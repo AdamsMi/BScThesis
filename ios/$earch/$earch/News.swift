@@ -2,14 +2,19 @@ import Foundation
 
 class News {
     
-    let newsTitle: String
-    let newsProvider: NewsProvider
-    let newsUrl: String
+    let title: String
+    let provider: NewsProvider
+    let path: String
+    var url: NSURL {
+        get {
+            return NSURL(string: self.path)!
+        }
+    }
     
-    init(title: String, url: String) {
-        newsTitle = title
-        newsUrl = url
-        newsProvider = NewsProvider.urlProvider(url)
+    init(title: String, path: String) {
+        self.title = title
+        self.path = path
+        self.provider = NewsProvider.providerForPath(self.path)
     }
     
 }
@@ -21,7 +26,7 @@ enum NewsProvider {
     case THE_TELEGRAPH
     case UNDEFINED
     
-    static func urlProvider(url: String) -> NewsProvider {
+    static func providerForPath(url: String) -> NewsProvider {
         if url.hasPrefix("http://www.reuters") {
             return .ROUTERS;
         } else if url.hasPrefix("http://www.zerohedge") {

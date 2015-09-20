@@ -17,3 +17,4 @@ DIR_MATRIX = '../resources/matrix_dump/'
 # search engine
 
 RANK_OF_APPROXIMATION = 200
+NUMBER_OF_RESULTS = 10

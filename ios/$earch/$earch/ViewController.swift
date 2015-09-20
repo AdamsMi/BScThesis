@@ -5,6 +5,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     // MARK: - Outlets
     
     @IBOutlet weak var newsTableView: UITableView!
+    @IBOutlet weak var searchTextFiedVerticalSpaceConstraint: NSLayoutConstraint!
     
     // MARK: - Properties
     
@@ -20,12 +21,32 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         super.viewDidLoad()
         
         registerNib()
+        moveSearchTextFieldToCenter()
         
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
+    }
+    
+    // MARK: - Customize view
+    
+    private func moveSearchTextFieldToCenter() {
+        let statusBarHeight : CGFloat = 22
+        let searchTextFieldHeight : CGFloat = 30
+        let screenHeight = UIScreen.mainScreen().bounds.size.height
+        searchTextFiedVerticalSpaceConstraint.constant = (screenHeight-statusBarHeight-searchTextFieldHeight)/2
+        view.layoutIfNeeded()
+    }
+    
+    private func animateSearchTextFieldOnSearch() {
+        view.layoutIfNeeded();
+        
+        searchTextFiedVerticalSpaceConstraint.constant = 10;
+        UIView.animateWithDuration(0.5, animations: { () -> Void in
+            self.view.layoutIfNeeded()
+        });
     }
     
     // MARK: - TableView Methods
@@ -55,6 +76,11 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         return cell;
     }
     
+    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        let news = newsArray[indexPath.row] as News
+        UIApplication.sharedApplication().openURL(news.url)
+    }
+    
     // MARK: - TextField Methods
     
     func textFieldShouldReturn(textField: UITextField) -> Bool {
@@ -69,6 +95,8 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     // MARK: - API Methods
     
     private func searchResultsWithQuery(query: String) {
+        animateSearchTextFieldOnSearch()
+        
         SearchMethod.searchWithString(query: query) { (response) -> () in
             if response.isResponseOK() {
                 self.newsArray = response.newsArray

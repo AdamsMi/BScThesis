@@ -20,9 +20,9 @@ class NewsTableViewCell: UITableViewCell {
     }
     
     func initWithNews(news: News) {
-        self.newsTitleLabel.text = news.newsTitle
+        self.newsTitleLabel.text = news.title
         
-        switch (news.newsProvider) {
+        switch (news.provider) {
         case .ZERO_HEDGE:
             self.newsImageView.image = UIImage(named: "zerohedge")
             break

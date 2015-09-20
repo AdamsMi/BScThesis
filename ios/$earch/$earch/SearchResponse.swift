@@ -19,7 +19,7 @@ class SearchResponse {
                 for newsDict in newsArrayFromDict  {
                     let title = newsDict["title"] as! String
                     let url = newsDict["url"] as! String
-                    newsArray.append(News(title: title, url: url))
+                    newsArray.append(News(title: title, path: url))
                 }
             } else {
                 status = .FAILURE

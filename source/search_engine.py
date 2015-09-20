@@ -10,7 +10,7 @@ from source.database_manager import DatabaseManager
 from sparsesvd import sparsesvd
 from scipy.sparse import csc_matrix, lil_matrix
 from source.file_cleaner import cleaningOfWord
-from search_config import RANK_OF_APPROXIMATION
+from search_config import RANK_OF_APPROXIMATION, NUMBER_OF_RESULTS
 
 from search_config import DIR_MATRIX
 
@@ -92,7 +92,7 @@ def fasterCorrelations(matrix, indices, vector,  amountOfDocuments):
         for ind in indices:
             simil += matrix[ind,x] * vector[0,ind]
         similarities.append((x, simil))
-    return sorted(similarities, key=lambda tup: tup[1], reverse=True)[:5]
+    return sorted(similarities, key=lambda tup: tup[1], reverse=True)[:NUMBER_OF_RESULTS]
 
 class SearchClient(object):
 
