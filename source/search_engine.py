@@ -6,14 +6,13 @@ import time
 import numpy
 import webbrowser
 
-
 from source.database_manager import DatabaseManager
 from sparsesvd import sparsesvd
 from scipy.sparse import csc_matrix, lil_matrix
 from source.file_cleaner import cleaningOfWord
 from search_config import RANK_OF_APPROXIMATION
 
-from search_config import DIR_DUMPS
+from search_config import DIR_MATRIX
 
 
 def sparseLowRankAppr(matrix, rank):
@@ -95,36 +94,43 @@ def fasterCorrelations(matrix, indices, vector,  amountOfDocuments):
         similarities.append((x, simil))
     return sorted(similarities, key=lambda tup: tup[1], reverse=True)[:5]
 
+class SearchClient(object):
+
+    def __init__(self):
+        self.matrix, self.amountOfWords, self.dictOfWords, \
+        self.amountOfFiles, self.listOfArticles, self.idfs = loadData(DIR_MATRIX)
+
+        self.matrix = sparseLowRankAppr(self.matrix, RANK_OF_APPROXIMATION)
+        print "Data loaded from files & Matrix built\n"
+
+    def search(self, text):
+        start = time.time()
+
+        # Gather correlations
+        vector = text.split()
+        cleanedVector = cleanVector(vector)
+        bagOfWords, indices = createBagOfWordsFromVector(cleanedVector, self.amountOfWords, self.dictOfWords, self.idfs)
+        b = fasterCorrelations(self.matrix, indices, bagOfWords, self.amountOfFiles)
+
+        # Get links from database
+        dbMan = DatabaseManager()
+        results = []
+        for x in b:
+            results.append(dbMan.get_link(self.listOfArticles[x[0]]))
+        stop = time.time()
+
+        # Return response dictionary
+        return results, stop-start
+
+
 if __name__ == '__main__':
-    matrix, amountOfWords, dictOfWords, amountOfFiles, listOfArticles, idfs = loadData(DIR_DUMPS)
-    matrix = sparseLowRankAppr(matrix, RANK_OF_APPROXIMATION)
-    print "Data loaded from files & Matrix built\n"
+    searchClient = SearchClient()
 
+    while (True):
+        results, timeOfQuery = searchClient.search(raw_input("Input: "))
 
-
-    vector = raw_input("Input: ").split()
-    cleanedVect = cleanVector(vector)
-
-    bagOfWords, indices = createBagOfWordsFromVector(cleanedVect, amountOfWords, dictOfWords, idfs)
-    #tart = time.time()
-    #a = findCorrelations(matrix, bagOfWords, amountOfFiles)
-    #stop = time.time()
-    #print "old correlation measure took: ", stop-start, " seconds\n"
-
-    start = time.time()
-    b = fasterCorrelations(matrix, indices, bagOfWords, amountOfFiles)
-    stop = time.time()
-    print "new correlation measure took: ", stop-start, " seconds\n"
-
-    #print a
-    print b
-    #print a
-    dbMan = DatabaseManager()
-    for x in b:
-
-        #print dbMan.get_link(listOfArticles[x[0]])
-
-        webbrowser.open(dbMan.get_link(listOfArticles[x[0]])[0])
+        for news in results:
+            webbrowser.open(news.url)
 
 
 

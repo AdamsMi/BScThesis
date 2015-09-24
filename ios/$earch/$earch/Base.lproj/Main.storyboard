@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="7706" systemVersion="14E46" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="BYZ-38-t0r">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="7703"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="_earch" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
+                        <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Type to search" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="al1-2l-gVw">
+                                <rect key="frame" x="16" y="37" width="568" height="30"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="30" id="YQt-Ne-Ddy"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits" autocorrectionType="no" spellCheckingType="no" returnKeyType="search"/>
+                                <connections>
+                                    <outlet property="delegate" destination="BYZ-38-t0r" id="GL1-3O-zwO"/>
+                                </connections>
+                            </textField>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Zjc-ft-biU">
+                                <rect key="frame" x="0.0" y="75" width="600" height="1"/>
+                                <color key="backgroundColor" red="0.74535447359085083" green="0.76451271772384644" blue="0.77806031703948975" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="1" id="n1s-N5-sOp"/>
+                                </constraints>
+                            </view>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="none" rowHeight="44" sectionHeaderHeight="22" sectionFooterHeight="22" translatesAutoresizingMaskIntoConstraints="NO" id="IzS-xp-cW0">
+                                <rect key="frame" x="16" y="84" width="568" height="508"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                                <color key="sectionIndexBackgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                                <connections>
+                                    <outlet property="dataSource" destination="BYZ-38-t0r" id="9Mj-Af-sHu"/>
+                                    <outlet property="delegate" destination="BYZ-38-t0r" id="Y4Z-id-HqU"/>
+                                </connections>
+                            </tableView>
+                        </subviews>
+                        <color key="backgroundColor" red="0.92828035354614258" green="0.94068849086761475" blue="0.94405525922775269" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="IzS-xp-cW0" firstAttribute="trailing" secondItem="8bC-Xf-vdC" secondAttribute="trailingMargin" id="Avx-Hp-dgR"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="Zjc-ft-biU" secondAttribute="trailing" constant="-16" id="K6g-Zq-OWc"/>
+                            <constraint firstItem="al1-2l-gVw" firstAttribute="trailing" secondItem="8bC-Xf-vdC" secondAttribute="trailingMargin" id="L1r-q5-uoj"/>
+                            <constraint firstItem="al1-2l-gVw" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" constant="17" id="Lbf-YE-ISo"/>
+                            <constraint firstItem="IzS-xp-cW0" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" id="OFg-aw-NK5"/>
+                            <constraint firstItem="IzS-xp-cW0" firstAttribute="top" secondItem="Zjc-ft-biU" secondAttribute="bottom" constant="8" id="nEv-zh-Xbp"/>
+                            <constraint firstItem="Zjc-ft-biU" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" constant="-16" id="sM8-Jn-73v"/>
+                            <constraint firstItem="Zjc-ft-biU" firstAttribute="top" secondItem="al1-2l-gVw" secondAttribute="bottom" constant="8" id="sSx-8g-fYI"/>
+                            <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="IzS-xp-cW0" secondAttribute="bottom" constant="8" id="tN8-4g-8Pm"/>
+                            <constraint firstItem="al1-2l-gVw" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" id="uXm-kW-0Nu"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="newsTableView" destination="IzS-xp-cW0" id="bX6-RL-QZa"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="602" y="327"/>
+        </scene>
+    </scenes>
+</document>

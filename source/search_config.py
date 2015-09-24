@@ -1,15 +1,18 @@
+# file dump downloader
+
+DIR_LOG = "../resources/logs"
 
 # file cleaner
 
-directoryOfDump = '../crawlers/dump/'
+DIR_DUMP = '../resources/downloaded_files/'
+DIR_DATABASE = '../resources/'
 
 # preprocessing
 
+NUMBER_OF_ARTICLES = 1000
 
-NUMBER_OF_ARTICLES = 10000
-
-DIR_FILES = '../files/'
-DIR_DUMPS = 'matrix_dump/'
+DIR_FILES = '../resources/cleaned_files/'
+DIR_MATRIX = '../resources/matrix_dump/'
 
 # search engine
 
