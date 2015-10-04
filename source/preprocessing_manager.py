@@ -8,7 +8,7 @@ import cPickle as pickle
 import scipy
 import time
 import scipy.sparse.linalg
-hahaMATRIX, DIR_FILES
+from search_config import  DIR_MATRIX, NUMBER_OF_ARTICLES, DIR_FILES
 
 def normalization(matrix, amountOfDocuments):
     """
