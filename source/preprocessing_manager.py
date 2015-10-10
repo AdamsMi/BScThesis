@@ -56,6 +56,29 @@ def idf(matrix, numberOfArticles, dictOfTermOccurrences, listOfWords):
         idfs.append(idf)
     return matrix, idfs
 
+def gatherAllNGramsFromArticles(listOfArticles, pathToArticles):
+
+    NGRAM_SIZE = 2
+    ngrams = set()
+
+    for currentFileName in listOfArticles:
+        with open(pathToArticles + currentFileName) as currentFile:
+            text = currentFile.read().split(" ")
+            for k in range (0, len(text)-NGRAM_SIZE+1):
+                window = ""
+                start = k
+                end = k + NGRAM_SIZE
+                for i in range (start, end):
+                    if window=="":
+                        window = text[i]
+                    else:
+                        window = window + " " + text[i]
+
+                ngrams.add(window)
+
+    print len(ngrams)
+    return ngrams
+
 
 def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
     """
@@ -145,36 +168,40 @@ if __name__ == '__main__':
     if(amountOfFiles<1):
         sys.exit("Wrong content of directory to be processed")
 
-    start = time.time()
-    setOfWords , mapOfWords, matrix, dictOfTermOccurrences, listOfWords= gatherAllWordsFromArticles(listOfArticleFiles, DIR_FILES)
-    stop = time.time()
-
-    print "Gathering words done, took: ", stop-start, " seconds\n"
-    print "Amount of words: ", len(setOfWords), "\n"
-
-    start = time.time()
-    matrix, idfs = idf(matrix, amountOfFiles,dictOfTermOccurrences, listOfWords)
-    stop = time.time()
-
-    print "IDF done, took : ", stop-start, " seconds\n"
+    # start = time.time()
+    # setOfWords , mapOfWords, matrix, dictOfTermOccurrences, listOfWords= gatherAllWordsFromArticles(listOfArticleFiles, DIR_FILES)
+    # stop = time.time()
+    #
+    # print "Gathering words done, took: ", stop-start, " seconds\n"
+    # print "Amount of words: ", len(setOfWords), "\n"
 
     start = time.time()
-    matrix = normalization(matrix, amountOfFiles)
+    gatherAllNGramsFromArticles(listOfArticleFiles, DIR_FILES)
     stop = time.time()
 
-    print "Normalization done, took: ", stop-start, " seconds\n"
-
-    start = time.time()
-    writeDataToFile(matrix, { "amountOfWords" : len(setOfWords),
-                              "mapOfWords" : mapOfWords,
-                              "amountOfFiles" :  amountOfFiles,
-                              "dictOfTermOccurrences" : dictOfTermOccurrences,
-                              "listOfArticleFiles" : listOfArticleFiles,
-                              "idfs" : idfs
-                            })
-    stop = time.time()
-
-    print "Writing to file done, took: ", stop - start, " seconds\n"
+    # start = time.time()
+    # matrix, idfs = idf(matrix, amountOfFiles,dictOfTermOccurrences, listOfWords)
+    # stop = time.time()
+    #
+    # print "IDF done, took : ", stop-start, " seconds\n"
+    #
+    # start = time.time()
+    # matrix = normalization(matrix, amountOfFiles)
+    # stop = time.time()
+    #
+    # print "Normalization done, took: ", stop-start, " seconds\n"
+    #
+    # start = time.time()
+    # writeDataToFile(matrix, { "amountOfWords" : len(setOfWords),
+    #                           "mapOfWords" : mapOfWords,
+    #                           "amountOfFiles" :  amountOfFiles,
+    #                           "dictOfTermOccurrences" : dictOfTermOccurrences,
+    #                           "listOfArticleFiles" : listOfArticleFiles,
+    #                           "idfs" : idfs
+    #                         })
+    # stop = time.time()
+    #
+    # print "Writing to file done, took: ", stop - start, " seconds\n"
 
 
 
