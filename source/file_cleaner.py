@@ -6,13 +6,14 @@ import sqlite3
 
 from nltk.stem.snowball import SnowballStemmer
 from nltk.corpus import stopwords
+from nltk.data import path as nltk_path
 
 from database_manager import DatabaseManager
 
 from search_config import DIR_FILES, DIR_DUMP, DIR_DATABASE
 
 stemmer = SnowballStemmer('english')
-
+nltk_path.append("../resources/nltk_data")
 
 def write_to_file(content, new_file_name):
     new_file = open(new_file_name, 'w')
