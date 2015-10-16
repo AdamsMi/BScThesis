@@ -61,11 +61,15 @@ def idf(matrix, numberOfArticles, dictOfTermOccurrences, listOfWords):
 def gatherAllNGramsFromArticles(listOfArticles, pathToArticles):
 
     NGRAM_SIZE = 2
-    ngrams = set()
+    ngram_index = 0
+    ngramsDictionary = dict()
+    articlesNgramsVectors =[]
     dbManager = DatabaseManager()
 
     for currentFileName in listOfArticles:
         title = dbManager.get_link(currentFileName).title
+
+        ngramVector = []
 
         titleCleared = ""
         for word in title.split():
@@ -84,9 +88,16 @@ def gatherAllNGramsFromArticles(listOfArticles, pathToArticles):
                 else:
                     window = window + " " + text[i]
 
-            ngrams.add(window)
+            if ngramsDictionary.has_key(window):
+                ngramVector.append(ngramsDictionary[window])
+            else:
+                ngramsDictionary[window] = ngram_index
+                ngramVector.append(ngram_index)
+                ngram_index += 1
 
-    return ngrams
+        articlesNgramsVectors.append(ngramVector)
+
+    return ngramsDictionary, articlesNgramsVectors
 
 
 def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
@@ -176,11 +187,11 @@ if __name__ == '__main__':
         sys.exit("Wrong content of directory to be processed")
 
     start = time.time()
-    nGramsSet = gatherAllNGramsFromArticles(listOfArticleFiles, DIR_FILES)
+    ngramsDictionary, articlesNgramsVectors = gatherAllNGramsFromArticles(listOfArticleFiles, DIR_FILES)
     stop = time.time()
 
     print "Gathering n-grams done, took: ", stop-start, " seconds"
-    print "Amount of n-grams: ", len(nGramsSet), "\n"
+    print "Amount of n-grams: ", len(ngramsDictionary), "\n"
 
     start = time.time()
     setOfWords , mapOfWords, matrix, dictOfTermOccurrences, listOfWords= gatherAllWordsFromArticles(listOfArticleFiles, DIR_FILES)
@@ -207,7 +218,9 @@ if __name__ == '__main__':
                               "amountOfFiles" :  amountOfFiles,
                               "dictOfTermOccurrences" : dictOfTermOccurrences,
                               "listOfArticleFiles" : listOfArticleFiles,
-                              "idfs" : idfs
+                              "idfs" : idfs,
+                              "ngramsDict": ngramsDictionary,
+                              "articlesNgrams": articlesNgramsVectors
                             })
     stop = time.time()
 
