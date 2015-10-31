@@ -10,7 +10,7 @@ import time
 import scipy.sparse.linalg
 from file_cleaner import cleaningOfWord
 from database_manager import DatabaseManager
-from search_config import  DIR_MATRIX, NUMBER_OF_ARTICLES, DIR_FILES
+from search_config import  DIR_MATRIX, NUMBER_OF_ARTICLES, DIR_FILES, NGRAM_SIZE
 
 def normalization(matrix, amountOfDocuments):
     """
@@ -60,7 +60,6 @@ def idf(matrix, numberOfArticles, dictOfTermOccurrences, listOfWords):
 
 def gatherAllNGramsFromArticles(listOfArticles, pathToArticles):
 
-    NGRAM_SIZE = 2
     ngram_index = 0
     ngramsDictionary = dict()
     articlesNgramsVectors =[]

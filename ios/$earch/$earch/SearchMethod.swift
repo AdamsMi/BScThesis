@@ -2,7 +2,7 @@ import Foundation
 
 class SearchMethod {
     
-    static func searchWithString(#query: String, completion:(SearchResponse) -> ()) {
+    static func searchWithString(query query: String, completion:(SearchResponse) -> ()) {
         let escapedQuery = query.stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding)
         
         let url = NSURL(string: "http://10.22.110.255:9458/search?query=\(escapedQuery!)")
@@ -11,10 +11,10 @@ class SearchMethod {
         NSURLConnection.sendAsynchronousRequest(request,
             queue: NSOperationQueue.mainQueue()) {(response, data, error) in
                 
-            var jsonResult: NSDictionary = NSJSONSerialization.JSONObjectWithData(data,
-                options: NSJSONReadingOptions.MutableContainers, error: nil) as! NSDictionary
+            let jsonResult: NSDictionary = (try! NSJSONSerialization.JSONObjectWithData(data,
+                options: NSJSONReadingOptions.MutableContainers)) as! NSDictionary
                 
-            println("\(jsonResult)")
+            print("\(jsonResult)")
                 
             let response = SearchResponse(responseDict: jsonResult)
             completion(response)

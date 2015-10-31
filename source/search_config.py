@@ -18,3 +18,6 @@ DIR_MATRIX = '../resources/matrix_dump/'
 
 RANK_OF_APPROXIMATION = 200
 NUMBER_OF_RESULTS = 10
+
+#ngrams
+NGRAM_SIZE = 2

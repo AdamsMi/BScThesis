@@ -1,4 +1,3 @@
-
 __author__ = 'Michal'
 
 import pickle
@@ -8,6 +7,7 @@ import webbrowser
 
 from source.database_manager import DatabaseManager
 from sparsesvd import sparsesvd
+from search_config import NGRAM_SIZE
 from scipy.sparse import csc_matrix, lil_matrix
 from source.file_cleaner import cleaningOfWord
 from search_config import RANK_OF_APPROXIMATION, NUMBER_OF_RESULTS
@@ -46,10 +46,18 @@ def loadData(directory):
     with open(directory + 'listOfArticleFiles.pkl', 'rb') as inputFile:
         listOfArticleFiles = pickle.load(inputFile)
 
+    with open(directory + 'ngramsDict.pkl', 'rb') as inputFile:
+        ngramsDict = pickle.load(inputFile)
+
+    with open(directory + 'articlesNgrams.pkl', 'rb') as inputFile:
+        articlesNgrams = pickle.load(inputFile)
+
     with open(directory + 'idfs.pkl', 'rb') as inputFile:
         idfs = pickle.load(inputFile)
 
-    return csc_matrix((data, indices, indptr)), amountOfWords, mapOfWords, amountOfFiles, listOfArticleFiles, idfs
+
+    return csc_matrix((data, indices, indptr)), amountOfWords, mapOfWords, \
+           amountOfFiles, listOfArticleFiles, idfs, articlesNgrams, ngramsDict
 
 
 def cleanVector(vector):
@@ -76,6 +84,33 @@ def createBagOfWordsFromVector(vector, amountOfTerms, dictionary, idfs):
     bagOfWords = csc_matrix(bagOfWords, dtype=float)
     return bagOfWords, indices
 
+def createNgramsVectorForWord(vector, ngramsDictionary):
+    nGramsVector = []
+
+    for k in range (0, len(vector)-NGRAM_SIZE+1):
+        window = ""
+        start = k
+        end = k + NGRAM_SIZE
+        for i in range (start, end):
+            if window=="":
+                window = vector[i]
+            else:
+                window = window + " " + vector[i]
+
+        if ngramsDictionary.has_key(window):
+                nGramsVector.append(ngramsDictionary[window])
+
+    return nGramsVector
+
+def nGramsCorrelations(titleNgrams, articleNgrams):
+    similarities = []
+    for x in xrange(len(articleNgrams)):
+        result = set(articleNgrams[x]).intersection(titleNgrams)
+        maxNgrams = float(max(len(articleNgrams[x]), len(titleNgrams)))
+        similarities.append((x, len(result)/maxNgrams))
+
+    return sorted(similarities, key=lambda tup: tup[1], reverse=True)[:5]
+
 
 def findCorrelations(matrix, vector, amountOfDocuments):
     similarities = []
@@ -97,8 +132,11 @@ def fasterCorrelations(matrix, indices, vector,  amountOfDocuments):
 class SearchClient(object):
 
     def __init__(self):
+
+        # Load all data
         self.matrix, self.amountOfWords, self.dictOfWords, \
-        self.amountOfFiles, self.listOfArticles, self.idfs = loadData(DIR_MATRIX)
+        self.amountOfFiles, self.listOfArticles, self.idfs, \
+        self.articleTitleNgrams, self.nGramsDict = loadData(DIR_MATRIX)
 
         self.matrix = sparseLowRankAppr(self.matrix, RANK_OF_APPROXIMATION)
         print "Data loaded from files & Matrix built\n"
@@ -110,6 +148,13 @@ class SearchClient(object):
         vector = text.split()
         cleanedVector = cleanVector(vector)
         bagOfWords, indices = createBagOfWordsFromVector(cleanedVector, self.amountOfWords, self.dictOfWords, self.idfs)
+
+        corellationNgrams = []
+        if (len(cleanedVector)>=NGRAM_SIZE):
+            nGramsVector = createNgramsVectorForWord(cleanedVector, self.nGramsDict)
+            corellationNgrams = nGramsCorrelations(nGramsVector, self.articleTitleNgrams)
+
+
         b = fasterCorrelations(self.matrix, indices, bagOfWords, self.amountOfFiles)
 
         # Get links from database
@@ -129,8 +174,8 @@ if __name__ == '__main__':
     while (True):
         results, timeOfQuery = searchClient.search(raw_input("Input: "))
 
-        for news in results:
-            webbrowser.open(news.url)
+        # for news in results:
+            # webbrowser.open(news.url)
 
 
 
