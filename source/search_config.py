@@ -5,6 +5,7 @@ DIR_LOG = "../resources/logs"
 # file cleaner
 
 DIR_DUMP = '../resources/downloaded_files/'
+DIR_XML = '../resources/routers_xml/'
 DIR_DATABASE = '../resources/'
 
 # preprocessing

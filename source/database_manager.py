@@ -29,7 +29,7 @@ class DatabaseManager(object):
         # Create table if not exists
         tb_exists = "SELECT name FROM sqlite_master WHERE type='table' AND name='news'"
         if not self.c.execute(tb_exists).fetchone():
-           self.c.execute("CREATE TABLE news (url text primary key, title text, text_file text)")
+           self.c.execute("CREATE TABLE news (url text primary key, title text, text_file text, category text)")
 
         # Commit
         self.db.commit()
@@ -37,7 +37,7 @@ class DatabaseManager(object):
     def put_article_with_args(self, args):
         return self.put_article(args[0], args[1], args[2])
 
-    def put_article(self, url, title, file_name):
+    def put_article(self, url, title, file_name, category = None):
         """
         Puts article info into database
         :param url: article URL
@@ -46,10 +46,15 @@ class DatabaseManager(object):
         :return: True if link was added successfully, False otherwise
         """
 
-        args = (url.decode("utf-8").rstrip(), title.decode("utf-8").rstrip(), file_name.decode("utf-8").rstrip(), )
+        if not category:
+            args = (url.decode("utf-8").rstrip(), title.decode("utf-8").rstrip(),
+                    file_name.decode("utf-8").rstrip(), None)
+        else:
+            args = (url.decode("utf-8").rstrip(), title.decode("utf-8").rstrip(),
+                    file_name.decode("utf-8").rstrip(), category.decode("utf-8").rstrip())
         c = self.db.cursor()
         try:
-            c.execute("INSERT INTO news VALUES (?,?,?)", args)
+            c.execute("INSERT INTO news VALUES (?,?,?,?)", args)
             return True
         except sqlite3.IntegrityError:
             return False
