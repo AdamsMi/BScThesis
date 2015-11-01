@@ -60,8 +60,8 @@ def structureCleaning(fileName):
 def cleaningOfWord(wordBeingCleaned):
 
     wordBeingCleaned = wordBeingCleaned.lower()
-    wordBeingCleaned = re.sub('[^A-Za-z0-9]+', '', wordBeingCleaned)
-    if wordBeingCleaned in stopwords.words('english') or 'http' in wordBeingCleaned or 'www' in wordBeingCleaned or (sum(c.isalpha() for c in wordBeingCleaned) >2 and sum(c.isdigit() for c in wordBeingCleaned) ) > 2 :
+    wordBeingCleaned = re.sub('[^A-Za-z]+', '', wordBeingCleaned)
+    if wordBeingCleaned in stopwords.words('english') or 'http' in wordBeingCleaned or 'www' in wordBeingCleaned :
         return None
 
     word = stemmer.stem(wordBeingCleaned).encode('ascii', 'english')

@@ -1,8 +1,12 @@
 import random
 import numpy as np
+import os
+import pickle
+
+from search_config import CLUST_DIR
 from collections import defaultdict
 from mpl_toolkits.mplot3d import Axes3D
-
+count=0
 
 def assign_to_clusters(elements, centroids):
     '''
@@ -17,6 +21,16 @@ def assign_to_clusters(elements, centroids):
         clIndex = min([(i[0], np.linalg.norm(x-centroids[i[0]])) for i in enumerate(centroids)], key=lambda t:t[1])[0]
         clusters[clIndex].append(x)
     return clusters
+
+def assign_indexes_to_clusters(elems, centroids):
+
+    clusters = defaultdict(list)
+
+    for ind, x in enumerate(elems):
+        clIndex = min([(i[0], np.linalg.norm(x-centroids[i[0]])) for i in enumerate(centroids)], key=lambda t:t[1])[0]
+        clusters[clIndex].append(ind)
+    return clusters
+
 
 def eval_centroids(clusters):
     '''
@@ -38,6 +52,13 @@ def in_minimum(prev, curr):
     :return: are we done with iterating - are we in a local minimum
     :rtype: bool
     '''
+    global count
+    count+=1
+
+    if count % 5 ==0:
+        print count
+
+
     return (set([tuple(a) for a in curr]) == set([tuple(a) for a in prev]))
 
 def find_centers(elems, k):
@@ -57,30 +78,16 @@ def find_centers(elems, k):
         curr = eval_centroids(clusters)
     return curr, clusters
 
-def init_board(n):
-    X = np.array([(random.uniform(-1, 1), random.uniform(-1, 1), random.uniform(-1, 1)) for i in range(n)])
-    return X
 
-a = init_board(20)
+def get_document_clustering(docs):
 
-import matplotlib.pyplot as plt
-fig, ax = plt.subplots()
+    if os.path.exists(CLUST_DIR):
+        with open(CLUST_DIR, 'rb') as handle:
+            return pickle.load(handle)
 
+    centr, clust = find_centers(docs, 30)
+    clusters =  assign_indexes_to_clusters(docs, centr)
+    with open(CLUST_DIR, 'wb') as handle:
+        pickle.dump(clusters, handle)
+    return clusters
 
-colors = ['green', 'blue', 'brown', 'yellow', 'black']
-
-centr, clust = find_centers(a,4)
-v=0
-
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-
-for x in clust.values():
-    ax.scatter([el[0] for el in x], [el[1] for el in x], [el[2] for el in x], color=colors[v])
-    v+=1
-
-ax.scatter([el[0] for el in centr], [el[1] for el in centr], [el[2] for el in centr], color=colors[v],  s=42, marker=u'*')
-
-plt.show()
-print centr
-print clust

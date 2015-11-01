@@ -5,15 +5,15 @@ import pickle
 import time
 import numpy
 import webbrowser
+import numpy as np
+import os
 
-from source.database_manager import DatabaseManager
+from database_manager import DatabaseManager
 from sparsesvd import sparsesvd
 from scipy.sparse import csc_matrix, lil_matrix
-from source.file_cleaner import cleaningOfWord
+from file_cleaner import cleaningOfWord
 from search_config import RANK_OF_APPROXIMATION
-
 from search_config import DIR_MATRIX
-
 
 def sparseLowRankAppr(matrix, rank):
     ut, s, vt = sparsesvd(matrix, rank)
@@ -112,10 +112,14 @@ class SearchClient(object):
         bagOfWords, indices = createBagOfWordsFromVector(cleanedVector, self.amountOfWords, self.dictOfWords, self.idfs)
         b = fasterCorrelations(self.matrix, indices, bagOfWords, self.amountOfFiles)
 
+        print 'correlations'
+        print b
         # Get links from database
         dbMan = DatabaseManager()
         results = []
         for x in b:
+            print x
+            print self.listOfArticles[x[0]]
             results.append(dbMan.get_link(self.listOfArticles[x[0]]))
         stop = time.time()
 
@@ -126,11 +130,26 @@ class SearchClient(object):
 if __name__ == '__main__':
     searchClient = SearchClient()
 
-    while (True):
-        results, timeOfQuery = searchClient.search(raw_input("Input: "))
 
-        for news in results:
-            webbrowser.open(news.url)
+    print 'starting clustering\n'
+    from k_means import get_document_clustering
+    clus = get_document_clustering(np.transpose(searchClient.matrix))
+    import pprint as pp
+    #pp.pprint(clus)
+    #for x in clus.keys():
+    #    print x, len(clus[x])
+    #print 'done clustering\n'
+
+    while (True):
+        #results, timeOfQuery = searchClient.search(raw_input("Input: "))
+        artNr = int(raw_input('article nr'))
+        if artNr == -1:
+            break
+        article = searchClient.listOfArticles[artNr]
+        print article
+        #for news in results:
+        dbMan = DatabaseManager()
+        webbrowser.open(dbMan.get_link(article).url)
 
 
 

@@ -16,4 +16,6 @@ DIR_MATRIX = '../resources/matrix_dump/'
 
 # search engine
 
+
+CLUST_DIR = '../resources/clust_dump/clustering.pickle'
 RANK_OF_APPROXIMATION = 200
