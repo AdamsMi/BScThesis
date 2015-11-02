@@ -20,10 +20,15 @@ def cleanArticleFormReuters(listOfArticles, pathToArticles, lock):
         articleDict = xmltodict.parse(content)['newsitem']
 
         articleTopic = None
-        for topic in articleDict['metadata']['codes']:
-            if topic['@class']=='bip:topics:1.0':
-                articleTopic=topic['code'][0]['@code']
-
+        try:
+            for topic in articleDict['metadata']['codes']:
+                    if topic['@class']=='bip:topics:1.0':
+                        try:
+                            articleTopic=topic['code'][0]['@code']
+                        except:
+                            articleTopic=topic['code']['@code']
+        except:
+            continue
 
         articleText = ""
         for line in articleDict['text']['p']:
@@ -31,18 +36,18 @@ def cleanArticleFormReuters(listOfArticles, pathToArticles, lock):
             articleText += line
 
         lock.acquire()
-        passed =  dbManager.put_article("", articleDict['title'], currentFileName, articleTopic)
+        passed =  dbManager.put_article(articleDict['@itemid'], articleDict['title'], currentFileName, articleTopic)
         lock.release()
 
         if passed:
 
             # Save file to new file
-            write_to_file(articleText, pathToArticles + currentFileName)
+            write_to_file(articleText, pathToArticles + currentFileName.replace('.xml',''))
 
             # Open it again
             # TODO it shouldn't be opened again
             newFileContent = ""
-            currentFile = open(pathToArticles + currentFileName, 'r+')
+            currentFile = open(pathToArticles + currentFileName.replace('.xml',''), 'r+')
 
             # Use nltk
             for line in currentFile:
@@ -58,10 +63,6 @@ def cleanArticleFormReuters(listOfArticles, pathToArticles, lock):
             currentFile.close()
         else:
             print "Duplicate file: " + currentFileName
-
-
-
-
 
 
 if __name__ == "__main__":
