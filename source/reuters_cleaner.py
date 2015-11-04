@@ -7,36 +7,41 @@ import time
 import sqlite3
 import xmltodict
 
-from database_manager import DatabaseManager
+from database_manager import DatabaseManagerReuters
 from search_config import DIR_XML, DIR_DATABASE, DIR_FILES
 from file_cleaner import chunks, write_to_file, cleaningOfWord
 
 def cleanArticleFormReuters(listOfArticles, pathToArticles, lock):
-    dbManager = DatabaseManager()
+    dbManager = DatabaseManagerReuters()
 
     for currentFileName in listOfArticles:
 
         content = open(DIR_XML + currentFileName, 'r').read()
         articleDict = xmltodict.parse(content)['newsitem']
 
-        articleTopic = None
+        articleTopic = ""
         try:
             for topic in articleDict['metadata']['codes']:
                     if topic['@class']=='bip:topics:1.0':
                         try:
-                            articleTopic=topic['code'][0]['@code']
-                        except:
                             articleTopic=topic['code']['@code']
+                        except:
+                            for code in topic['code']:
+                                codeName = code["@code"]
+                                articleTopic += codeName + ","
         except:
+            print "Error in " + currentFileName + ", skipping"
             continue
+
 
         articleText = ""
         for line in articleDict['text']['p']:
-            articleText += " "
-            articleText += line
+            if not line==None:
+                articleText += " "
+                articleText += line
 
         lock.acquire()
-        passed =  dbManager.put_article(articleDict['@itemid'], articleDict['title'], currentFileName, articleTopic)
+        passed =  dbManager.put_article(articleDict['title'], currentFileName, articleTopic)
         lock.release()
 
         if passed:
@@ -69,13 +74,13 @@ if __name__ == "__main__":
     start = time.time()
 
 
-    db = sqlite3.connect(DIR_DATABASE + "news.db")
+    db = sqlite3.connect(DIR_DATABASE + "news_reuters.db")
     c = db.cursor()
 
     # Create table if not exists
-    tb_exists = "SELECT name FROM sqlite_master WHERE type='table' AND name='news'"
+    tb_exists = "SELECT name FROM sqlite_master WHERE type='table' AND name='news_reuters'"
     if not c.execute(tb_exists).fetchone():
-       c.execute("CREATE TABLE news (url text primary key, title text, text_file text, category text)")
+       c.execute("CREATE TABLE news_reuters (text_file text primary key, title text, category text)")
 
     # Commit
     db.commit()

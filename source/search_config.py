@@ -5,7 +5,7 @@ DIR_LOG = "../resources/logs"
 # file cleaner
 
 DIR_DUMP = '../resources/downloaded_files/'
-DIR_XML = '../resources/routers_xml/'
+DIR_XML = '../resources/reuters_xml/'
 DIR_DATABASE = '../resources/'
 
 # preprocessing
@@ -18,6 +18,7 @@ DIR_MATRIX = '../resources/matrix_dump/'
 # search engine
 
 RANK_OF_APPROXIMATION = 200
+CLUST_DIR = '../resources/clust_dump/clustering.pickle'
 NUMBER_OF_RESULTS = 10
 
 #ngrams

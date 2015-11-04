@@ -8,9 +8,11 @@ import cPickle as pickle
 import scipy
 import time
 import scipy.sparse.linalg
+
 from file_cleaner import cleaningOfWord
 from database_manager import DatabaseManager
 from search_config import  DIR_MATRIX, NUMBER_OF_ARTICLES, DIR_FILES, NGRAM_SIZE
+
 
 def normalization(matrix, amountOfDocuments):
     """

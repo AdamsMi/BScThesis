@@ -16,6 +16,12 @@ class News(object):
             "url": self.url
         }
 
+class NewsReuters(object):
+
+    def __init__(self, title, category):
+        self.title = title
+        self.category=category.split(',')
+
 class DatabaseManager(object):
 
     def __init__(self):
@@ -29,7 +35,7 @@ class DatabaseManager(object):
         # Create table if not exists
         tb_exists = "SELECT name FROM sqlite_master WHERE type='table' AND name='news'"
         if not self.c.execute(tb_exists).fetchone():
-           self.c.execute("CREATE TABLE news (url text primary key, title text, text_file text, category text)")
+           self.c.execute("CREATE TABLE news (url text primary key, title text, text_file text)")
 
         # Commit
         self.db.commit()
@@ -82,3 +88,75 @@ class DatabaseManager(object):
 
     def get_connection(self):
         return self.db
+
+class DatabaseManagerReuters(object):
+
+    def __init__(self):
+        """
+        Creates database and table if not exists
+        """
+
+        self.db = sqlite3.connect(DIR_DATABASE + "news_reuters.db")
+        self.c = self.db.cursor()
+
+        # Create table if not exists
+        tb_exists = "SELECT name FROM sqlite_master WHERE type='table' AND name='news'"
+        if not self.c.execute(tb_exists).fetchone():
+           self.c.execute("CREATE TABLE news (text_file text primary key, title text, category text)")
+
+        # Commit
+        self.db.commit()
+
+
+    def put_article(self, title, file_name, category):
+        """
+        Puts article info into database
+        :param category: article category
+        :param title: article title
+        :param file_name: article text file
+        :return: True if link was added successfully, False otherwise
+        """
+
+        args = (file_name.decode("utf-8").rstrip(),
+                title.decode("utf-8").rstrip(),
+                category.decode("utf-8").rstrip())
+        c = self.db.cursor()
+        try:
+            c.execute("INSERT INTO news(text_file, title, category) VALUES (?,?,?)", args)
+            return True
+        except sqlite3.IntegrityError:
+            return False
+        finally:
+            c.close()
+            self.db.commit()
+
+
+    def get_link(self, file_name):
+        """
+        Returns URL address for given file
+        :param file_name: file containing news text
+        :return: News with URL name and title or None if no such file
+        """
+
+        args = (file_name.decode("utf-8"),)
+        c = self.db.cursor()
+        try:
+            row = c.execute("SELECT category, title FROM news WHERE text_file like ?", args).fetchone()
+            return NewsReuters(row[1],row[0])
+        except:
+            return None
+        finally:
+            c.close()
+
+    def get_connection(self):
+        return self.db
+
+
+
+if __name__ == '__main__':
+
+    databaseReuters = DatabaseManagerReuters()
+
+    news = databaseReuters.get_link("479305newsML.xml")
+
+    print news.title
