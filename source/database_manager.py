@@ -151,12 +151,25 @@ class DatabaseManagerReuters(object):
     def get_connection(self):
         return self.db
 
+    def get_by_category(self, category):
+
+        c = self.db.cursor()
+        try:
+            result = []
+            rows = c.execute("SELECT category, title FROM news WHERE category like '%"+ category +",%'")
+            for row in rows:
+                result.append(NewsReuters(row[1],row[0]))
+            return result
+        except:
+            return []
+        finally:
+            c.close()
 
 
 if __name__ == '__main__':
 
     databaseReuters = DatabaseManagerReuters()
 
-    news = databaseReuters.get_link("479305newsML.xml")
+    news = databaseReuters.get_by_category("C2")
 
-    print news.title
+    print news
