@@ -56,6 +56,10 @@ def idf(matrix, numberOfArticles, dictOfTermOccurrences, listOfWords):
     for ind, word in enumerate(listOfWords):
         amountOfDocumentsWithGivenTerm = dictOfTermOccurrences[word]
         idf = math.log(float(numberOfArticles)/float(amountOfDocumentsWithGivenTerm), 10)
+        if idf<0:
+            print numberOfArticles
+            print amountOfDocumentsWithGivenTerm
+            print word
         matrix[ind,:]*=idf
         idfs.append(idf)
     return matrix, idfs
@@ -129,9 +133,8 @@ def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
                 for word in line.split():
                         if word in words:
                             indexesOfWordsInCurrentFile.append(dictOfWords[word])
-
                         else:
-                            dictOfTermOccurrences[word] = 0
+                            dictOfTermOccurrences[word] = 1
                             words.add(word)
                             dictOfWords[word] = wordAmount
                             mapOfWords.append(word)
@@ -146,6 +149,7 @@ def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
     for x, obj in enumerate(workingListOfOccurrences):
         for index in obj:
             matrix[index,x]+=1
+        for index in set(obj):
             dictOfTermOccurrences[mapOfWords[index]]+=1
 
 

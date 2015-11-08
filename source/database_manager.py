@@ -156,11 +156,12 @@ class DatabaseManagerReuters(object):
         c = self.db.cursor()
         try:
             result = []
-            rows = c.execute("SELECT category, title FROM news WHERE category like '%"+ category +",%'")
+            rows = c.execute("SELECT text_file, category, title FROM news WHERE category like '%"+ category +",%'")
             for row in rows:
-                result.append(NewsReuters(row[1],row[0]))
+                result.append(row[0])
             return result
         except:
+            print 'error during getting by category...'
             return []
         finally:
             c.close()
@@ -170,6 +171,7 @@ if __name__ == '__main__':
 
     databaseReuters = DatabaseManagerReuters()
 
-    news = databaseReuters.get_by_category("C2")
+    news = databaseReuters.get_by_category("C18")
 
-    print news
+    for n in news:
+        print n.category

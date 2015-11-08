@@ -5,16 +5,14 @@ import time
 import numpy
 import webbrowser
 import numpy as np
-import os
 
-from database_manager import DatabaseManager
-from sparsesvd import sparsesvd
-from search_config import NGRAM_SIZE
-from scipy.sparse import csc_matrix, lil_matrix
-
-from file_cleaner import cleaningOfWord
-from search_config import RANK_OF_APPROXIMATION, NUMBER_OF_RESULTS
-from search_config import DIR_MATRIX
+from database_manager   import DatabaseManager
+from sparsesvd          import sparsesvd
+from search_config      import NGRAM_SIZE
+from scipy.sparse       import csc_matrix, lil_matrix
+from file_cleaner       import cleaningOfWord
+from search_config      import RANK_OF_APPROXIMATION, NUMBER_OF_RESULTS
+from search_config      import DIR_MATRIX
 
 def sparseLowRankAppr(matrix, rank):
     ut, s, vt = sparsesvd(matrix, rank)
