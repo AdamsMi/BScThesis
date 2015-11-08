@@ -56,10 +56,6 @@ def idf(matrix, numberOfArticles, dictOfTermOccurrences, listOfWords):
     for ind, word in enumerate(listOfWords):
         amountOfDocumentsWithGivenTerm = dictOfTermOccurrences[word]
         idf = math.log(float(numberOfArticles)/float(amountOfDocumentsWithGivenTerm), 10)
-        if idf<0:
-            print numberOfArticles
-            print amountOfDocumentsWithGivenTerm
-            print word
         matrix[ind,:]*=idf
         idfs.append(idf)
     return matrix, idfs
