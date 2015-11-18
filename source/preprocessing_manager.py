@@ -10,7 +10,6 @@ import time
 import scipy.sparse.linalg
 
 from file_cleaner import cleaningOfWord
-from database_manager import DatabaseManager
 from search_config import  DIR_MATRIX, NUMBER_OF_ARTICLES, DIR_FILES, NGRAM_SIZE
 
 
@@ -60,45 +59,50 @@ def idf(matrix, numberOfArticles, dictOfTermOccurrences, listOfWords):
         idfs.append(idf)
     return matrix, idfs
 
+
 def gatherAllNGramsFromArticles(listOfArticles, pathToArticles):
 
     ngram_index = 0
     ngramsDictionary = dict()
     articlesNgramsVectors =[]
-    dbManager = DatabaseManager()
+    articleInvarints = []
 
     for currentFileName in listOfArticles:
-        title = dbManager.get_link(currentFileName).title
+        with open(pathToArticles + currentFileName) as currentFile:
 
-        ngramVector = []
+            title = currentFile.read()
 
-        titleCleared = ""
-        for word in title.split():
-            cleanedWord = cleaningOfWord(word)
-            if cleanedWord is not None:
-                titleCleared+=cleanedWord + " "
+            ngramVector = []
 
-        text = titleCleared.split(" ")
-        for k in range (0, len(text)-NGRAM_SIZE+1):
-            window = ""
-            start = k
-            end = k + NGRAM_SIZE
-            for i in range (start, end):
-                if window=="":
-                    window = text[i]
+            titleCleared = ""
+            for word in title.split():
+                cleanedWord = cleaningOfWord(word)
+                if cleanedWord is not None:
+                    titleCleared+=cleanedWord + " "
+
+            text = titleCleared.split(" ")
+            for k in range (0, len(text)-NGRAM_SIZE+1):
+                window = ""
+                start = k
+                end = k + NGRAM_SIZE
+                for i in range (start, end):
+                    if window=="":
+                        window = text[i]
+                    else:
+                        window = window + " " + text[i]
+
+                if ngramsDictionary.has_key(window):
+                    ngramVector.append(ngramsDictionary[window])
                 else:
-                    window = window + " " + text[i]
 
-            if ngramsDictionary.has_key(window):
-                ngramVector.append(ngramsDictionary[window])
-            else:
-                ngramsDictionary[window] = ngram_index
-                ngramVector.append(ngram_index)
-                ngram_index += 1
+                    ngramsDictionary[window] = ngram_index
+                    ngramVector.append(ngram_index)
+                    ngram_index += 1
 
-        articlesNgramsVectors.append(ngramVector)
+            articlesNgramsVectors.append(ngramVector)
+            articleInvarints.append((len(ngramVector), len(set(ngramVector))))
 
-    return ngramsDictionary, articlesNgramsVectors
+    return articleInvarints, articlesNgramsVectors
 
 
 def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
@@ -188,11 +192,10 @@ if __name__ == '__main__':
         sys.exit("Wrong content of directory to be processed")
 
     start = time.time()
-    ngramsDictionary, articlesNgramsVectors = gatherAllNGramsFromArticles(listOfArticleFiles, DIR_FILES)
+    articleInvarints, articlesNgramsVectors = gatherAllNGramsFromArticles(listOfArticleFiles, DIR_FILES)
     stop = time.time()
 
     print "Gathering n-grams done, took: ", stop-start, " seconds"
-    print "Amount of n-grams: ", len(ngramsDictionary), "\n"
 
     start = time.time()
     setOfWords , mapOfWords, matrix, dictOfTermOccurrences, listOfWords= gatherAllWordsFromArticles(listOfArticleFiles, DIR_FILES)
@@ -220,7 +223,7 @@ if __name__ == '__main__':
                               "dictOfTermOccurrences" : dictOfTermOccurrences,
                               "listOfArticleFiles" : listOfArticleFiles,
                               "idfs" : idfs,
-                              "ngramsDict": ngramsDictionary,
+                              "articleInvariants": articleInvarints,
                               "articlesNgrams": articlesNgramsVectors
                             })
     stop = time.time()
