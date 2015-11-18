@@ -23,3 +23,6 @@ NUMBER_OF_RESULTS = 10
 
 #ngrams
 NGRAM_SIZE = 2
+
+#reuters
+DIR_TOPIC_CODES = '../resources/topic_codes.txt'
