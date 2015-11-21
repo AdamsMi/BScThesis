@@ -6,6 +6,7 @@ DIR_LOG = "../resources/logs"
 
 DIR_DUMP = '../resources/downloaded_files/'
 DIR_XML = '../resources/reuters_xml/'
+DIR_HD_XML = '/Volumes/normal/reuters/'
 DIR_DATABASE = '../resources/'
 
 # preprocessing
@@ -13,6 +14,7 @@ DIR_DATABASE = '../resources/'
 NUMBER_OF_ARTICLES = 1000
 
 DIR_FILES = '../resources/cleaned_files/'
+DIR_FILES_REUTERS = '/Volumes/normal/cleaned_files/'
 DIR_MATRIX = '../resources/matrix_dump/'
 
 # search engine
@@ -26,3 +28,4 @@ NGRAM_SIZE = 2
 
 #reuters
 DIR_TOPIC_CODES = '../resources/topic_codes.txt'
+DIR_CENTROIDS = '../resources/reuters_centroids/'

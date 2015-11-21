@@ -187,12 +187,12 @@ if __name__ == '__main__':
     if(amountOfFiles<1):
         sys.exit("Wrong content of directory to be processed")
 
-    start = time.time()
-    ngramsDictionary, articlesNgramsVectors = gatherAllNGramsFromArticles(listOfArticleFiles, DIR_FILES)
-    stop = time.time()
+    ##start = time.time()
+   # ngramsDictionary, articlesNgramsVectors = gatherAllNGramsFromArticles(listOfArticleFiles, DIR_FILES)
+   # stop = time.time()
 
-    print "Gathering n-grams done, took: ", stop-start, " seconds"
-    print "Amount of n-grams: ", len(ngramsDictionary), "\n"
+    #print "Gathering n-grams done, took: ", stop-start, " seconds"
+   # print "Amount of n-grams: ", len(ngramsDictionary), "\n"
 
     start = time.time()
     setOfWords , mapOfWords, matrix, dictOfTermOccurrences, listOfWords= gatherAllWordsFromArticles(listOfArticleFiles, DIR_FILES)
@@ -219,9 +219,9 @@ if __name__ == '__main__':
                               "amountOfFiles" :  amountOfFiles,
                               "dictOfTermOccurrences" : dictOfTermOccurrences,
                               "listOfArticleFiles" : listOfArticleFiles,
-                              "idfs" : idfs,
-                              "ngramsDict": ngramsDictionary,
-                              "articlesNgrams": articlesNgramsVectors
+                              "idfs" : idfs#,
+                            #  "ngramsDict": ngramsDictionary,
+                            #  "articlesNgrams": articlesNgramsVectors
                             })
     stop = time.time()
 

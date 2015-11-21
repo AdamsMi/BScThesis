@@ -121,7 +121,7 @@ if __name__ == "__main__":
     # Create table if not exists
     tb_exists = "SELECT name FROM sqlite_master WHERE type='table' AND name='news'"
     if not c.execute(tb_exists).fetchone():
-       c.execute("CREATE TABLE news (url text primary key, title text, text_file text)")
+       c.execute("CREATE TABLE news (url text primary key, title text, text_file text, category text)")
 
     # Commit
     db.commit()

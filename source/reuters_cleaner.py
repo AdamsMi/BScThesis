@@ -1,6 +1,5 @@
 __author__ = 'ready4s'
 
-import re
 import os
 import multiprocessing
 import time
@@ -8,7 +7,7 @@ import sqlite3
 import xmltodict
 
 from database_manager import DatabaseManagerReuters
-from search_config import DIR_XML, DIR_DATABASE, DIR_FILES
+from search_config import DIR_HD_XML, DIR_DATABASE, DIR_FILES
 from file_cleaner import chunks, write_to_file, cleaningOfWord
 
 def cleanArticleFormReuters(listOfArticles, pathToArticles, lock):
@@ -16,7 +15,7 @@ def cleanArticleFormReuters(listOfArticles, pathToArticles, lock):
 
     for currentFileName in listOfArticles:
 
-        content = open(DIR_XML + currentFileName, 'r').read()
+        content = open(DIR_HD_XML + currentFileName, 'r').read()
         articleDict = xmltodict.parse(content)['newsitem']
 
         articleTopic = ""
@@ -84,8 +83,13 @@ if __name__ == "__main__":
 
     # Commit
     db.commit()
-    listOfArticles = filter(lambda x: x[0] != '.',sorted(os.listdir(DIR_XML)))
-
+    listOfAlreadyCleaned = os.listdir(DIR_FILES)
+    listOfAlreadyCleaned = set([x + '.xml' for x in listOfAlreadyCleaned])
+    print 'got set'
+    listOfArticles = filter(lambda x: x[0] != '.' and '.zip' not in x,sorted(os.listdir(DIR_HD_XML)))
+    print 'got files'
+    listOfArticles = filter(lambda x: x not in listOfAlreadyCleaned, listOfArticles)
+    print 'amount of articles to clean: ', len(listOfArticles)
 
     lock = multiprocessing.Lock()
     processes = []
