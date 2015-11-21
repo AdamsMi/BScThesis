@@ -45,8 +45,8 @@ def loadData(directory):
     with open(directory + 'listOfArticleFiles.pkl', 'rb') as inputFile:
         listOfArticleFiles = pickle.load(inputFile)
 
-    with open(directory + 'ngramsDict.pkl', 'rb') as inputFile:
-        ngramsDict = pickle.load(inputFile)
+    with open(directory + 'articleInvariants.pkl', 'rb') as inputFile:
+        ngramsInvariants = pickle.load(inputFile)
 
     with open(directory + 'articlesNgrams.pkl', 'rb') as inputFile:
         articlesNgrams = pickle.load(inputFile)
@@ -56,7 +56,7 @@ def loadData(directory):
 
 
     return csc_matrix((data, indices, indptr)), amountOfWords, mapOfWords, \
-           amountOfFiles, listOfArticleFiles, idfs, articlesNgrams, ngramsDict
+           amountOfFiles, listOfArticleFiles, idfs, articlesNgrams, ngramsInvariants
 
 
 def cleanVector(vector):
@@ -135,7 +135,7 @@ class SearchClient(object):
         # Load all data
         self.matrix, self.amountOfWords, self.dictOfWords, \
         self.amountOfFiles, self.listOfArticles, self.idfs, \
-        self.articleTitleNgrams, self.nGramsDict = loadData(DIR_MATRIX)
+        self.articleNgrams, self.articleInvariants = loadData(DIR_MATRIX)
 
         self.matrix = sparseLowRankAppr(self.matrix, RANK_OF_APPROXIMATION)
         print "Data loaded from files & Matrix built\n"
