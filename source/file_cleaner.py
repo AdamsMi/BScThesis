@@ -126,7 +126,7 @@ if __name__ == "__main__":
     # Commit
     db.commit()
 
-    listOfArticles = filter(lambda x: x[0] != '.',sorted(os.listdir(DIR_DUMP)))
+    listOfArticles = filter(lambda x: x[0] != '.', sorted(os.listdir(DIR_DUMP)))
 
     lock = multiprocessing.Lock()
     processes = []

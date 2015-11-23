@@ -54,9 +54,7 @@ def in_minimum(prev, curr):
     '''
     global count
     count+=1
-
-    if count % 5 ==0:
-        print count
+    print count
 
 
     return (set([tuple(a) for a in curr]) == set([tuple(a) for a in prev]))
@@ -79,15 +77,17 @@ def find_centers(elems, k):
     return curr, clusters
 
 
-def get_document_clustering(docs):
+def get_document_clustering(docs, initial= True, nrOfClusters=12):
+    if initial:
+        if os.path.exists(CLUST_DIR):
+            with open(CLUST_DIR, 'rb') as handle:
+                return pickle.load(handle)
 
-    if os.path.exists(CLUST_DIR):
-        with open(CLUST_DIR, 'rb') as handle:
-            return pickle.load(handle)
-
-    centr, clust = find_centers(docs, 30)
+    centr, clust = find_centers(docs, nrOfClusters)
     clusters =  assign_indexes_to_clusters(docs, centr)
-    with open(CLUST_DIR, 'wb') as handle:
-        pickle.dump(clusters, handle)
+
+    if initial:
+        with open(CLUST_DIR, 'wb') as handle:
+            pickle.dump(clusters, handle)
     return clusters
 

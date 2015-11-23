@@ -11,7 +11,7 @@ import scipy.sparse.linalg
 
 from file_cleaner import cleaningOfWord
 from search_config import  DIR_MATRIX, NUMBER_OF_ARTICLES, DIR_FILES, NGRAM_SIZE
-
+from collections import defaultdict
 
 def normalization(matrix, amountOfDocuments):
     """
@@ -63,11 +63,11 @@ def idf(matrix, numberOfArticles, dictOfTermOccurrences, listOfWords):
 def gatherAllNGramsFromArticles(listOfArticles, pathToArticles):
 
     ngram_index = 0
-    ngramsDictionary = dict()
     articlesNgramsVectors =[]
     articleInvarints = []
 
     for currentFileName in listOfArticles:
+        ngramsDictionary = dict()
         with open(pathToArticles + currentFileName) as currentFile:
 
             title = currentFile.read()
@@ -99,10 +99,9 @@ def gatherAllNGramsFromArticles(listOfArticles, pathToArticles):
                     ngramVector.append(ngram_index)
                     ngram_index += 1
 
-            articlesNgramsVectors.append(ngramVector)
             articleInvarints.append((len(ngramVector), len(set(ngramVector))))
 
-    return articleInvarints, articlesNgramsVectors
+    return articleInvarints
 
 
 def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
@@ -129,17 +128,16 @@ def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
     for currentFileName in listOfArticles:
         with open(pathToArticles + currentFileName) as currentFile:
             indexesOfWordsInCurrentFile = []
-            for line in currentFile:
-                for word in line.split():
-                        if word in words:
-                            indexesOfWordsInCurrentFile.append(dictOfWords[word])
-                        else:
-                            dictOfTermOccurrences[word] = 1
-                            words.add(word)
-                            dictOfWords[word] = wordAmount
-                            mapOfWords.append(word)
-                            indexesOfWordsInCurrentFile.append(wordAmount)
-                            wordAmount+=1
+            for word in currentFile.read().split():
+                    if word in words:
+                        indexesOfWordsInCurrentFile.append(dictOfWords[word])
+                    else:
+                        dictOfTermOccurrences[word] = 1
+                        words.add(word)
+                        dictOfWords[word] = wordAmount
+                        mapOfWords.append(word)
+                        indexesOfWordsInCurrentFile.append(wordAmount)
+                        wordAmount+=1
 
             workingListOfOccurrences.append(indexesOfWordsInCurrentFile)
 
@@ -182,7 +180,7 @@ if __name__ == '__main__':
 
     print "Imports done"
 
-    listOfArticleFiles = filter(lambda x: x[0] != '.',sorted(os.listdir(DIR_FILES)))[:NUMBER_OF_ARTICLES]
+    listOfArticleFiles = filter(lambda x: x[0] != '.',sorted(os.listdir(DIR_FILES)))
     amountOfFiles = len(listOfArticleFiles)
 
     print "Amount of files: ", amountOfFiles
@@ -192,7 +190,7 @@ if __name__ == '__main__':
         sys.exit("Wrong content of directory to be processed")
 
     start = time.time()
-    articleInvarints, articlesNgramsVectors = gatherAllNGramsFromArticles(listOfArticleFiles, DIR_FILES)
+    articleInvarints = gatherAllNGramsFromArticles(listOfArticleFiles, DIR_FILES)
     stop = time.time()
 
     print "Gathering n-grams done, took: ", stop-start, " seconds"
@@ -224,8 +222,7 @@ if __name__ == '__main__':
                               "listOfArticleFiles" : listOfArticleFiles,
 
                               "idfs" : idfs,
-                              "articleInvariants": articleInvarints,
-                              "articlesNgrams": articlesNgramsVectors
+                              "articleInvariants": articleInvarints
                             })
     stop = time.time()
 

@@ -2,7 +2,6 @@ __author__ = 'Michal'
 
 import pickle
 import time
-import numpy
 import webbrowser
 import numpy as np
 
@@ -12,13 +11,31 @@ from search_config      import NGRAM_SIZE
 from scipy.sparse       import csc_matrix, lil_matrix
 from file_cleaner       import cleaningOfWord
 from search_config      import RANK_OF_APPROXIMATION, NUMBER_OF_RESULTS
-from search_config      import DIR_MATRIX
+from search_config      import DIR_MATRIX, DIR_CLUST_CENTROIDS
 
 def sparseLowRankAppr(matrix, rank):
     ut, s, vt = sparsesvd(matrix, rank)
-    print len(ut[0])
-    print len(ut)
-    return numpy.dot(ut.T, numpy.dot(numpy.diag(s), vt))
+    #print len(ut[0])
+    #print len(ut)
+    return np.dot(ut.T, np.dot(np.diag(s), vt))
+
+def calcCentroid(matrix, indices):
+    startingPoint = matrix[:, indices[0]]
+    for ind in indices[1:]:
+        startingPoint += matrix[:, ind]
+    return startingPoint
+
+def findArticleClosestToCentroid(listOfDocNumbers, centroid, mtx):
+    if len(listOfDocNumbers)==1:
+        return (listOfDocNumbers[0], 1.0)
+    a = []
+    sim = 0.0
+    for x in listOfDocNumbers:
+        for ind in xrange(len(centroid)):
+            sim += centroid[ind] * mtx[ind, x]
+        a.append((x,sim))
+        sim = 0.0
+    return sorted(a, key = lambda x: x[1], reverse=True)[0]
 
 
 def loadData(directory):
@@ -48,15 +65,12 @@ def loadData(directory):
     with open(directory + 'articleInvariants.pkl', 'rb') as inputFile:
         ngramsInvariants = pickle.load(inputFile)
 
-    with open(directory + 'articlesNgrams.pkl', 'rb') as inputFile:
-        articlesNgrams = pickle.load(inputFile)
-
     with open(directory + 'idfs.pkl', 'rb') as inputFile:
         idfs = pickle.load(inputFile)
 
 
     return csc_matrix((data, indices, indptr)), amountOfWords, mapOfWords, \
-           amountOfFiles, listOfArticleFiles, idfs, articlesNgrams, ngramsInvariants
+           amountOfFiles, listOfArticleFiles, idfs, ngramsInvariants
 
 
 def cleanVector(vector):
@@ -78,7 +92,6 @@ def createBagOfWordsFromVector(vector, amountOfTerms, dictionary, idfs):
             bagOfWords[0, ind] *= idfs[ind]
             indices.append(ind)
         except:
-            print "one of the words not in out dataset, that is to say: %s" % x
             continue
     bagOfWords = csc_matrix(bagOfWords, dtype=float)
     return bagOfWords, indices
@@ -135,24 +148,17 @@ class SearchClient(object):
         # Load all data
         self.matrix, self.amountOfWords, self.dictOfWords, \
         self.amountOfFiles, self.listOfArticles, self.idfs, \
-        self.articleNgrams, self.articleInvariants = loadData(DIR_MATRIX)
-
+        self.articleInvariants = loadData(DIR_MATRIX)
         self.matrix = sparseLowRankAppr(self.matrix, RANK_OF_APPROXIMATION)
-        print "Data loaded from files & Matrix built\n"
 
+        print "Data loaded from files & Matrix built\n"
+        print 'matrix shape: ', self.matrix.shape
     def search(self, text):
-        start = time.time()
 
         # Gather correlations
         vector = text.split()
         cleanedVector = cleanVector(vector)
         bagOfWords, indices = createBagOfWordsFromVector(cleanedVector, self.amountOfWords, self.dictOfWords, self.idfs)
-
-        corellationNgrams = []
-        if (len(cleanedVector)>=NGRAM_SIZE):
-            nGramsVector = createNgramsVectorForWord(cleanedVector, self.nGramsDict)
-            corellationNgrams = nGramsCorrelations(nGramsVector, self.articleTitleNgrams)
-
 
         b = fasterCorrelations(self.matrix, indices, bagOfWords, self.amountOfFiles)
 
@@ -162,38 +168,92 @@ class SearchClient(object):
         dbMan = DatabaseManager()
         results = []
         for x in b:
-            print x
-            print self.listOfArticles[x[0]]
+            #print x
+            #print self.listOfArticles[x[0]]
             results.append(dbMan.get_link(self.listOfArticles[x[0]]))
-        stop = time.time()
 
         # Return response dictionary
-        return results, stop-start
+        return results
 
 
 if __name__ == '__main__':
     searchClient = SearchClient()
+    dm = DatabaseManager()
+
+    typeOfSearch = 2#int(raw_input('(1) Query-search or (2) drill-down:'))
+
+    if typeOfSearch ==1:
+
+        while (True):
+            results  = searchClient.search(raw_input("Input"))
+            print results
+    else:
+        from k_means import get_document_clustering
+        clus = get_document_clustering(np.transpose(searchClient.matrix))
+
+        with open(DIR_CLUST_CENTROIDS + 'closestArt', 'rb') as input:
+            centerArticles = pickle.load(input)
+
+        with open(DIR_CLUST_CENTROIDS + 'res_limited', 'rb') as input:
+            categoriesClusters = pickle.load(input)
 
 
-    print 'starting clustering\n'
-    from k_means import get_document_clustering
-    clus = get_document_clustering(np.transpose(searchClient.matrix))
-    import pprint as pp
-    #pp.pprint(clus)
-    #for x in clus.keys():
-    #    print x, len(clus[x])
-    #print 'done clustering\n'
+        for k in clus.keys():
+            print '\n\n Cluster nr: ', k
+            for cat in categoriesClusters[str(k)]:
+                print cat[0]
+            print centerArticles[k]
+            print 'amount of articles in the cluster: ', len(clus[k])
 
-    while (True):
-        #results, timeOfQuery = searchClient.search(raw_input("Input: "))
-        artNr = int(raw_input('article nr'))
-        if artNr == -1:
-            break
-        article = searchClient.listOfArticles[artNr]
-        print article
-        #for news in results:
-        dbMan = DatabaseManager()
-        webbrowser.open(dbMan.get_link(article).url)
+        print '\n'
+        chosenCluster = int(raw_input('Choose cluster nr:'))
+        print '\n'
+        articlesAmountInCurrentClust = len(clus[chosenCluster])
 
+        if len(clus[chosenCluster]) <=10:
+            ct = 1
+            articleNumbers = clus[chosenCluster]
+            for artNo in articleNumbers:
+                title = searchClient.listOfArticles[artNo]
+                ans = dm.get_link(title).title
+                print ct, ': ', ans
+                ct+=1
+            choice = int(raw_input('Nr of the chosen article: '))
 
+            title = searchClient.listOfArticles[articleNumbers[choice-1]]
+            ans = dm.get_link(title).url
+            webbrowser.open(ans)
 
+        else:
+            while articlesAmountInCurrentClust>10:
+                indices = sorted(clus[chosenCluster])
+
+                submatrix = searchClient.matrix[:, indices]
+                howManyClusters = 12 if articlesAmountInCurrentClust>20 else 6
+
+                clus = get_document_clustering(np.transpose(submatrix), initial=False, nrOfClusters= howManyClusters)
+                print clus
+                for k in clus.keys():
+                    indxs = [indices[l] for l in clus[k]]
+                    print '\n\nCluster nr:', k
+                    centroid = calcCentroid(searchClient.matrix, indxs)
+                    closest= findArticleClosestToCentroid(indxs, centroid, searchClient.matrix)
+                    title = searchClient.listOfArticles[closest[0]]
+                    newTitle = dm.get_link(title).title
+                    print newTitle
+                    print 'amount of articles in the cluster: ', len(indxs)
+                chosenCluster = int(raw_input('\n\nChoose cluster nr:'))
+                articlesAmountInCurrentClust = len(clus[chosenCluster])
+            ct = 1
+            articleNumbers = sorted(clus[chosenCluster])
+            ndxs = [indices[l] for l in articleNumbers]
+            for artNo in ndxs:
+                title = searchClient.listOfArticles[artNo]
+                ans = dm.get_link(title).title
+                print ct, ': ', ans
+                ct+=1
+            choice = int(raw_input('Nr of the chosen article: '))
+
+            title = searchClient.listOfArticles[ndxs[choice-1]]
+            ans = dm.get_link(title).url
+            webbrowser.open(ans)

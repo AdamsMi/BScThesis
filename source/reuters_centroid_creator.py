@@ -1,12 +1,14 @@
+import os
 import pickle
 import math
-
+import time
+import numpy
 from database_manager   import DatabaseManagerReuters
-from scipy.sparse       import lil_matrix
-from search_config      import DIR_TOPIC_CODES, DIR_FILES_REUTERS, DIR_MATRIX, DIR_CENTROIDS
-from search_engine      import createBagOfWordsFromVector
-
+from scipy.sparse       import csr_matrix, csc_matrix
+from search_config      import DIR_TOPIC_CODES, DIR_FILES_REUTERS, DIR_MATRIX, DIR_CENTROIDS2, DIR_CENTROIDS
+from search_config      import DIR_BOWS
 dbManager = DatabaseManagerReuters()
+
 
 def getSavedThings(directory):
 
@@ -22,13 +24,30 @@ def getSavedThings(directory):
     return amountOfWords, mapOfWords, idfs
 
 
+def getSavedBow(fileName):
+    path = DIR_BOWS + fileName
+    with open(path + '_data.pkl', 'rb') as input:
+        data = pickle.load(input)
+
+    with open(path + '_ind.pkl', 'rb') as input:
+        ind = pickle.load(input)
+
+    with open(path + '_ptr.pkl', 'rb') as input:
+        ptr = pickle.load(input)
+    try:
+        m= csr_matrix((data, ind, ptr))
+    except ValueError:
+        print fileName
+        return None
+    return m
+
 def saveCentroidOfCategory(centroid, catName):
     '''
     Save a calculated centroid.
     :param centroid: calculated centroid
     :param catName: category name
     '''
-    with open(DIR_CENTROIDS + catName, 'wb') as writeFile:
+    with open(DIR_CENTROIDS2 + catName, 'wb') as writeFile:
         pickle.dump(centroid, writeFile)
 
 
@@ -61,65 +80,92 @@ def getArticlesForAllCategories():
     cats = readCategoriesFromFile(DIR_TOPIC_CODES)
     nonzero = 0
     zeros = 0
+    a = []
     for cat in cats:
         articlesPerCat = dbManager.get_by_category(cat[0])
-        print cat, ' ', len(articlesPerCat)
         if len(articlesPerCat) >0:
-            nonzero+=1
-        else:
-            zeros+=1
-    print 'nonzeros: ', nonzero
-    print 'zeros', zeros
+            a.append([cat[0], len(articlesPerCat)])
+    return a
+
+
+def calcIdf(bow, idfs, amountOfWords):
+    ct=0
+    for x in xrange(amountOfWords):
+        if bow[x,0]>0:
+            ct+=1
+            bow[x,0] *= idfs[x]
+    print 'nonzeros: ', ct
+
+    return bow
 
 def createCentroidForCategory(category):
     filesAboutCategory = dbManager.get_by_category(category)
-    print 'files for category C18 amount: ', len(filesAboutCategory)
     amountOfWords, dictOfWords, idfs = getSavedThings(DIR_MATRIX)
-    for idf in idfs:
-        if idf < 0 :
-            print idf
-    a = None
 
+    a = numpy.zeros((amountOfWords, 1), float)
+    aOfFiles = len(filesAboutCategory)
     for fileName in filesAboutCategory:
-        fNStr = str(fileName)
-        pathToCleanedFile = DIR_FILES_REUTERS + fNStr.replace('.xml', '')
-        print pathToCleanedFile
-        words = getWordsFromFile(pathToCleanedFile)
-        indices, bow = createBagOfWordsFromVector(words, amountOfWords, dictOfWords, idfs)
-        indices = lil_matrix(indices)
-        if a is not None:
-            zeros, nonZeroIndices = indices.nonzero()
-            for x in nonZeroIndices:
-                a[0, x] += indices[0,x]
+        fileName = str(fileName).replace('.xml', '')
+        bow = getSavedBow(fileName)
+        if bow is None:
+            print 'skipped', fileName
+            aOfFiles -=1
+            continue
+        c,b = bow.nonzero()
+        for x in b:
+            a[x,0] += bow[0,x]
+
+    return calcIdf(a, idfs, amountOfWords) / float(aOfFiles)
+
+
+def normalizeCentroid(centroid):
+    s=0
+    ind, nonzeros = centroid.nonzero()
+    for x in ind:
+        s += centroid[x,0] * centroid[x,0]
+    centroid /= math.sqrt(s)
+    s=0
+    for x in ind:
+        s += centroid[x,0] * centroid[x,0]
+    return centroid
+
+if __name__ == '__main__':
+
+    cats = getArticlesForAllCategories()
+    #
+    # print cats
+
+
+    currDone = os.listdir(DIR_CENTROIDS2)
+
+    for cat in cats:
+        if cat[0] not in currDone:
+            if cat[1]>0:
+                start = time.time()
+                print 'creating centroid for category: ', cat[0], ': ', cat[1]
+                ans = createCentroidForCategory(cat[0])
+                ans = csc_matrix(ans)
+                ans = normalizeCentroid(ans)
+                saveCentroidOfCategory(ans, cat[0])
+                print 'finished, took: ', time.time() - start
         else:
-            a = indices
-    return a / float(len(filesAboutCategory)), bow
+            print cat[0]
+
+#
 
 
-def normalizeCentroid(centroid, nonzeros):
-    for x in bow:
-        s += ans[0,x]^2
-    print 'sum'
-    print s
-
-    ans /= math.sqrt(s)
-
-
-#ans, bow = createCentroidForCategory('C18')
-
-#print ans
-
-#s = 0
-#print ans
-
-#print ans
-
-#saveCentroidOfCategory(ans, 'C18')
-getArticlesForAllCategories()
-
-#with open(DIR_CENTROIDS+ 'GREL') as input:
+#
+# with open(DIR_CENTROIDS+ 'c16') as input:
 #    gwelf_centroid = pickle.load(input)
-
-
-#print gwelf_centroid
-#print type(gwelf_centroid)
+#
+#
+# print gwelf_centroid
+# print type(gwelf_centroid)
+#
+#
+# with open(DIR_CENTROIDS2+ 'c16') as input:
+#    gwelf_centroid = pickle.load(input)
+#
+#
+# print gwelf_centroid
+# print type(gwelf_centroid)

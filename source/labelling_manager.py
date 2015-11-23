@@ -1,11 +1,13 @@
+import os
 import pickle
-import webbrowser
+import numpy as np
 
 from database_manager   import DatabaseManager
-from search_config      import DIR_CENTROIDS
+from search_config      import DIR_CENTROIDS2
 from scipy.sparse       import csc_matrix
-from search_config      import DIR_MATRIX
+from search_config      import DIR_MATRIX, DIR_CLUST_CENTROIDS
 from search_engine      import sparseLowRankAppr
+from collections import defaultdict
 
 def loadMatrix(directory):
     with open(directory + 'data.pkl', 'rb') as inputFile:
@@ -45,31 +47,30 @@ def fasterCorrelations(matrix, indices, vector,  amountOfDocuments):
     return sorted(similarities, key=lambda tup: tup[1], reverse=True)[:3]
 
 
-class Centroid(object):
-    def __init__(self, centroid, catName):
-        self.centroid = centroid
-        self.catName = catName
+centroidList = filter(lambda x : '.' not in x , os.listdir(DIR_CENTROIDS2))
+print centroidList
 
-    def calcSimilarity(self, bow):
-        return self.centroid * bow
+dictOfResults = defaultdict(list)
+ct = 0
+for ctName in centroidList:
+    with open(DIR_CENTROIDS2+ ctName) as input:
+        curr_centroid = pickle.load(input)
+    print ctName
+    ct+=1
+    print len(centroidList) - ct, ' to go'
+    a,b = curr_centroid.nonzero()
+    for x in os.listdir(DIR_CLUST_CENTROIDS):
+        if '.' not in x:
+            #print x
+            with open(DIR_CLUST_CENTROIDS + x) as input:
+                clust_centroid = pickle.load(input)
+                sum = 0.0
+                for ind in a:
+                    sum+= curr_centroid[ind,0] * clust_centroid[ind]
+                #print sum
+                dictOfResults[x].append({ctName : sum})
 
+print dictOfResults
 
-with open(DIR_CENTROIDS+ 'C18') as input:
-    gwelf_centroid = pickle.load(input)
-
-mtx, amountOfFiles, listOfArticleFiles = loadMatrix(DIR_MATRIX)
-
-mtx = sparseLowRankAppr(mtx, 250)
-
-corr = fasterCorrelations(mtx, gwelf_centroid.nonzero()[1], gwelf_centroid, amountOfFiles)
-rs= []
-for x in corr:
-    print x
-    rs.append(listOfArticleFiles[x[0]])
-
-print rs
-
-dbMan = DatabaseManager()
-
-for res in rs:
-    webbrowser.open(dbMan.get_link(res).url)
+with open(DIR_CLUST_CENTROIDS + 'res', 'wb') as output:
+    pickle.dump(dictOfResults, output)
