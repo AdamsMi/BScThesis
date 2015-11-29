@@ -1,22 +1,22 @@
-__author__ = 'Michal'
-
-import pickle
 import time
-import webbrowser
+import pickle
 import numpy as np
 
 from database_manager   import DatabaseManager
 from sparsesvd          import sparsesvd
-from search_config      import NGRAM_SIZE
+from search_config      import NGRAM_SIZE, CLUST_DIR
 from scipy.sparse       import csc_matrix, lil_matrix
 from file_cleaner       import cleaningOfWord
 from search_config      import RANK_OF_APPROXIMATION, NUMBER_OF_RESULTS
 from search_config      import DIR_MATRIX, DIR_CLUST_CENTROIDS
+from k_means import get_document_clustering
+from stemming_mapper import getFreqWordsForClustering
+from tester import getBestClustersForQuery
+from k_means_centroid_manager import calculateCentroidsForClustering
+
 
 def sparseLowRankAppr(matrix, rank):
     ut, s, vt = sparsesvd(matrix, rank)
-    #print len(ut[0])
-    #print len(ut)
     return np.dot(ut.T, np.dot(np.diag(s), vt))
 
 def calcCentroid(matrix, indices):
@@ -143,117 +143,94 @@ def fasterCorrelations(matrix, indices, vector,  amountOfDocuments):
 
 class SearchClient(object):
 
-    def __init__(self):
+    def __init__(self, calcSVD = True):
 
         # Load all data
         self.matrix, self.amountOfWords, self.dictOfWords, \
         self.amountOfFiles, self.listOfArticles, self.idfs, \
         self.articleInvariants = loadData(DIR_MATRIX)
-        self.matrix = sparseLowRankAppr(self.matrix, RANK_OF_APPROXIMATION)
+        start = time.time()
+        if calcSVD:
+            self.matrix = sparseLowRankAppr(self.matrix, RANK_OF_APPROXIMATION)
 
-        print "Data loaded from files & Matrix built\n"
-        print 'matrix shape: ', self.matrix.shape
-    def search(self, text):
+            print "Data loaded from files & Matrix built\n"
+            print 'SVD took: ', time.time() - start
+            print 'matrix shape: ', self.matrix.shape
 
-        # Gather correlations
+
+    def search(self, text, limit_clusters = False, clustering = None):
         vector = text.split()
         cleanedVector = cleanVector(vector)
         bagOfWords, indices = createBagOfWordsFromVector(cleanedVector, self.amountOfWords, self.dictOfWords, self.idfs)
-
+        if limit_clusters:
+            start = time.time()
+            bestClusters = [x[0] for x in getBestClustersForQuery(bagOfWords)]
+            artIndexesOfBestClusters = sorted(sum([clustering[ind] for ind in bestClusters], []))
+            bLimited = fasterCorrelations(self.matrix[:, artIndexesOfBestClusters], indices, bagOfWords, len(artIndexesOfBestClusters))
+            bLimited = [artIndexesOfBestClusters[y[0]] for y in bLimited]
+            print 'calculating limited indexes took: ', time.time() - start
+        #else:
+        start = time.time()
         b = fasterCorrelations(self.matrix, indices, bagOfWords, self.amountOfFiles)
+        print 'normal computations took: ', time.time() - start
+        r = []
 
-        print 'correlations'
-        print b
-        # Get links from database
+        for artInd in bLimited:
+            if artInd in [a[0] for a in b]:
+                r.append([l[0] for l in b].index(artInd))
+        print sorted(r)
         dbMan = DatabaseManager()
         results = []
         for x in b:
-            #print x
-            #print self.listOfArticles[x[0]]
             results.append(dbMan.get_link(self.listOfArticles[x[0]]))
 
-        # Return response dictionary
         return results
 
 
-if __name__ == '__main__':
-    searchClient = SearchClient()
-    dm = DatabaseManager()
+    def getInitialClustering(self):
 
-    typeOfSearch = 2#int(raw_input('(1) Query-search or (2) drill-down:'))
-
-    if typeOfSearch ==1:
-
-        while (True):
-            results  = searchClient.search(raw_input("Input"))
-            print results
-    else:
-        from k_means import get_document_clustering
-        clus = get_document_clustering(np.transpose(searchClient.matrix))
-
-        with open(DIR_CLUST_CENTROIDS + 'closestArt', 'rb') as input:
-            centerArticles = pickle.load(input)
+        clustering = get_document_clustering(np.transpose(searchClient.matrix), fileName='')
+        calculateCentroidsForClustering(clustering, clusteringName = '', mat = self.matrix)
+        freqWords = getFreqWordsForClustering(clustering, searchClient.dictOfWords, '', searchClient, dm)
 
         with open(DIR_CLUST_CENTROIDS + 'res_limited', 'rb') as input:
             categoriesClusters = pickle.load(input)
+        res = dict()
+        for k in categoriesClusters.keys():
+            res[int(k)] = [a[0] for a in categoriesClusters[k]]
+
+        return clustering, res, freqWords
 
 
-        for k in clus.keys():
-            print '\n\n Cluster nr: ', k
-            for cat in categoriesClusters[str(k)]:
-                print cat[0]
-            print centerArticles[k]
-            print 'amount of articles in the cluster: ', len(clus[k])
+    def getClustering(self, drillDownPath):
 
-        print '\n'
-        chosenCluster = int(raw_input('Choose cluster nr:'))
-        print '\n'
-        articlesAmountInCurrentClust = len(clus[chosenCluster])
+        fileName = ''
+        for ind in drillDownPath:
+            fileName+='_' + str(ind)
 
-        if len(clus[chosenCluster]) <=10:
-            ct = 1
-            articleNumbers = clus[chosenCluster]
-            for artNo in articleNumbers:
-                title = searchClient.listOfArticles[artNo]
-                ans = dm.get_link(title).title
-                print ct, ': ', ans
-                ct+=1
-            choice = int(raw_input('Nr of the chosen article: '))
 
-            title = searchClient.listOfArticles[articleNumbers[choice-1]]
-            ans = dm.get_link(title).url
-            webbrowser.open(ans)
+        with open(CLUST_DIR + 'b' + fileName[:-2] + '.pickle',  'rb') as handle:
+            formerClust = pickle.load(handle)
 
-        else:
-            while articlesAmountInCurrentClust>10:
-                indices = sorted(clus[chosenCluster])
+        artNumbers = formerClust[drillDownPath[-1]]
 
-                submatrix = searchClient.matrix[:, indices]
-                howManyClusters = 12 if articlesAmountInCurrentClust>20 else 6
+        if len(artNumbers) <= 10:
+            return artNumbers
 
-                clus = get_document_clustering(np.transpose(submatrix), initial=False, nrOfClusters= howManyClusters)
-                print clus
-                for k in clus.keys():
-                    indxs = [indices[l] for l in clus[k]]
-                    print '\n\nCluster nr:', k
-                    centroid = calcCentroid(searchClient.matrix, indxs)
-                    closest= findArticleClosestToCentroid(indxs, centroid, searchClient.matrix)
-                    title = searchClient.listOfArticles[closest[0]]
-                    newTitle = dm.get_link(title).title
-                    print newTitle
-                    print 'amount of articles in the cluster: ', len(indxs)
-                chosenCluster = int(raw_input('\n\nChoose cluster nr:'))
-                articlesAmountInCurrentClust = len(clus[chosenCluster])
-            ct = 1
-            articleNumbers = sorted(clus[chosenCluster])
-            ndxs = [indices[l] for l in articleNumbers]
-            for artNo in ndxs:
-                title = searchClient.listOfArticles[artNo]
-                ans = dm.get_link(title).title
-                print ct, ': ', ans
-                ct+=1
-            choice = int(raw_input('Nr of the chosen article: '))
+        amountOfClusters = 12 if len(artNumbers)>30 else 6
+        clustering = get_document_clustering(np.transpose(searchClient.matrix[:,artNumbers]),
+                                             fileName = fileName,
+                                             actualIndexes = artNumbers,
+                                             nrOfClusters = amountOfClusters)
+        calculateCentroidsForClustering(clustering,
+                                        clusteringName = fileName,
+                                        mat = self.matrix)
+        freqWords =getFreqWordsForClustering(clustering, searchClient.dictOfWords, fileName, searchClient, dm)
 
-            title = searchClient.listOfArticles[ndxs[choice-1]]
-            ans = dm.get_link(title).url
-            webbrowser.open(ans)
+        return clustering, freqWords
+
+if __name__ == '__main__':
+    searchClient = SearchClient()
+    dm = DatabaseManager
+    # clust, labels, words = searchClient.getInitialClustering()
+    #clust, words = searchClient.getClustering([1])

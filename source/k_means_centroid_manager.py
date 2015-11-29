@@ -1,30 +1,24 @@
 """
-Liczenie centroidow dla 12 klastrow i zapisywanie ich
+calculating centroids for a given clustering
 """
-
-
+import os
 import pickle
-from search_engine import SearchClient
-from k_means import get_document_clustering
 from search_config import DIR_CLUST_CENTROIDS
-import numpy as np
-from source.database_manager import DatabaseManager
 
-def calculateCentroidForDocuments(listOfDocNumbers):
+def calculateCentroidForDocuments(listOfDocNumbers, matrix):
 
     articlesInCluster =  len(listOfDocNumbers)
-    centroidCreatedOfFirstArticle = searchClient.matrix[:, listOfDocNumbers[0]]
+    centroidCreatedOfFirstArticle = matrix[:, listOfDocNumbers[0]]
     for x in listOfDocNumbers[1:]:
-        centroidCreatedOfFirstArticle+=searchClient.matrix[:, x]
+        centroidCreatedOfFirstArticle += matrix[:, x]
 
-    return centroidCreatedOfFirstArticle/float(articlesInCluster)
+    return centroidCreatedOfFirstArticle / float(articlesInCluster)
 
+def calculateCentroidsForClustering(clustering, clusteringName, mat):
 
-searchClient = SearchClient()
-clus = get_document_clustering(np.transpose(searchClient.matrix))
-
-for k, v in clus.items():
-    print 'calculating centroid for cluster: ', k
-    centroid = calculateCentroidForDocuments(v)
-    with open(DIR_CLUST_CENTROIDS + str(k), 'wb') as handle:
-        pickle.dump(centroid, handle)
+    for k, v in clustering.items():
+        if not os.path.exists(DIR_CLUST_CENTROIDS + 'b' + clusteringName + '_' + str(k)):
+            print 'calculating centroid for cluster: ', k
+            centroid = calculateCentroidForDocuments(v, mat)
+            with open(DIR_CLUST_CENTROIDS + 'b' + clusteringName + '_' + str(k), 'wb') as handle:
+                pickle.dump(centroid, handle)

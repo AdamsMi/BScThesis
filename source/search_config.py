@@ -20,7 +20,7 @@ DIR_MATRIX = '../resources/matrix_dump/'
 # search engine
 
 RANK_OF_APPROXIMATION = 200
-CLUST_DIR = '../resources/clust_dump/clustering.pickle'
+CLUST_DIR = '../resources/clust_dump/'
 NUMBER_OF_RESULTS = 10
 
 #ngrams
@@ -30,7 +30,13 @@ NGRAM_SIZE = 2
 DIR_TOPIC_CODES = '../resources/topic_codes.txt'
 DIR_CENTROIDS = '../resources/reuters_centroids/'
 DIR_BOWS = '../resources/bows_reuters/'
-DIR_CENTROIDS2 = '../resources/reuters_centroids2/'
 
 #k_means
+
+#dir where k_means centroids are stored
 DIR_CLUST_CENTROIDS = '../resources/clust_centroids/'
+NR_OF_CLUSTERS = 12
+
+#stemming mappings
+DIR_STEMMING_MAP = '../resources/word_core_mappings/'
+DIR_FREQ_WORDS = '../resources/freq_words/'
