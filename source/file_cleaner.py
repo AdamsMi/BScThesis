@@ -15,6 +15,10 @@ from search_config import DIR_FILES, DIR_DUMP, DIR_DATABASE
 stemmer = SnowballStemmer('english')
 nltk_path.append("../resources/nltk_data")
 
+
+def get_files_to_clean(dir):
+    return filter(lambda x: x[0] != '.', sorted(os.listdir(dir)))
+
 def write_to_file(content, new_file_name):
     new_file = open(new_file_name, 'w')
     new_file.write(content)
@@ -126,7 +130,7 @@ if __name__ == "__main__":
     # Commit
     db.commit()
 
-    listOfArticles = filter(lambda x: x[0] != '.', sorted(os.listdir(DIR_DUMP)))
+    listOfArticles = get_files_to_clean(DIR_DUMP)
 
     lock = multiprocessing.Lock()
     processes = []

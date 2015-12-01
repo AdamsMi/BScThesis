@@ -1,18 +1,28 @@
-import os
-from search_config import DIR_CENTROIDS2, DIR_CLUST_CENTROIDS
+"""
+Module looking for a centroid-closest article for each cluster of k-means.
+
+Reads input (centroids) from DIR_CLUST_CENTROIDS
+
+"""
+
 import pickle
 from k_means import get_document_clustering
+from search_config import DIR_CLUST_CENTROIDS
 from search_engine import SearchClient
 from source.database_manager import DatabaseManager
 
 
-def calcCentroid(matrix, indices):
-    startingPoint = matrix[:, indices[0]]
-    print startingPoint
-    for ind in indices[1:]:
-        startingPoint += matrix[:, ind]
-        print matrix[:, ind]
-    return startingPoint / float(len(indices))
+#def calcCentroid(matrix, indices):
+#    startingPoint = matrix[:, indices[0]]
+#    print startingPoint
+#    for ind in indices[1:]:
+#        startingPoint += matrix[:, ind]
+#        print matrix[:, ind]
+#    return startingPoint / float(len(indices))
+
+
+
+
 
 def findArticleClosestToCentroid(listOfDocNumbers, centroid, mtx):
     a = []
@@ -29,6 +39,7 @@ if __name__ == '__main__':
     dm = DatabaseManager()
     answerDict = {}
     clus = get_document_clustering(None)
+
     for k, v in clus.items():
         with open(DIR_CLUST_CENTROIDS + str(k)) as input:
             clust_centroid = pickle.load(input)
@@ -40,6 +51,6 @@ if __name__ == '__main__':
         print ans
         answerDict[k]=ans
 
-    with open(DIR_CLUST_CENTROIDS + 'closestArt','wb') as out:
-        pickle.dump(answerDict, out)
+    #with open(DIR_CLUST_CENTROIDS + 'closestArt','wb') as out:
+    #    pickle.dump(answerDict, out)
     print answerDict

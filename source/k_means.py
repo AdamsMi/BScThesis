@@ -5,7 +5,6 @@ import pickle
 
 from search_config import CLUST_DIR
 from collections import defaultdict
-from mpl_toolkits.mplot3d import Axes3D
 count=0
 
 def assign_to_clusters(elements, centroids):
@@ -77,17 +76,37 @@ def find_centers(elems, k):
     return curr, clusters
 
 
-def get_document_clustering(docs, initial= True, nrOfClusters=12):
-    if initial:
-        if os.path.exists(CLUST_DIR):
-            with open(CLUST_DIR, 'rb') as handle:
-                return pickle.load(handle)
+def get_document_clustering(docs, fileName = '', nrOfClusters=12, actualIndexes = None):
+    """
+
+    :param docs: bows for the articles being clustered
+    :param fileName: 'b'(_nrOfCluster)* - identifier of drill-down cluster. b means basic
+    :param nrOfClusters: optional, 12 by default
+    :param actualIndexes: Indexes of clustered files
+    :return: dictionary (nrOfCluster) -> [articles for this nr]
+    """
+
+    if os.path.exists(CLUST_DIR + 'b' + fileName + '.pickle'):
+        with open(CLUST_DIR + 'b' + fileName + '.pickle',  'rb') as handle:
+            return pickle.load(handle)
 
     centr, clust = find_centers(docs, nrOfClusters)
     clusters =  assign_indexes_to_clusters(docs, centr)
-
-    if initial:
-        with open(CLUST_DIR, 'wb') as handle:
+    if actualIndexes is None:
+        with open(CLUST_DIR + 'b' + fileName + '.pickle', 'wb') as handle:
             pickle.dump(clusters, handle)
-    return clusters
+        return clusters
+    else:
+        print clusters
+        print 'dealing with re-indexing...'
+        a = {}
+        actualIndexes  = sorted(actualIndexes)
+        for k in clusters.keys():
+            a[k] = [actualIndexes[l] for l in clusters[k]]
+        with open(CLUST_DIR + 'b' + fileName + '.pickle', 'wb') as handle:
+            print a
+            pickle.dump(a, handle)
+
+    return a
+
 
