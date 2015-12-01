@@ -11,13 +11,18 @@ class SearchMethod {
         NSURLConnection.sendAsynchronousRequest(request,
             queue: NSOperationQueue.mainQueue()) {(response, data, error) in
                 
-            let jsonResult: NSDictionary = (try! NSJSONSerialization.JSONObjectWithData(data,
-                options: NSJSONReadingOptions.MutableContainers)) as! NSDictionary
+                if let responseData = data {
+                    
+                    let jsonResult: NSDictionary = (try! NSJSONSerialization.JSONObjectWithData(responseData,
+                        options: NSJSONReadingOptions.MutableContainers)) as! NSDictionary
+                    
+                    print("\(jsonResult)")
+                    
+                    let response = SearchResponse(responseDict: jsonResult)
+                    completion(response)
+                    
+                }
                 
-            print("\(jsonResult)")
-                
-            let response = SearchResponse(responseDict: jsonResult)
-            completion(response)
         }
     }
     

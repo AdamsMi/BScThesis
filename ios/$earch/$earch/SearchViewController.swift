@@ -1,6 +1,6 @@
 import UIKit
 
-class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UITextFieldDelegate {
+class SearchViewController: UIViewController {
 
     // MARK: - Outlets
     
@@ -11,7 +11,6 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     
     var newsArray: [News]
     
-    
     required init?(coder aDecoder: NSCoder) {
         newsArray = []
         super.init(coder: aDecoder)
@@ -19,43 +18,17 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        registerNib()
-        moveSearchTextFieldToCenter()
-        
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
     }
     
-    // MARK: - Customize view
-    
-    private func moveSearchTextFieldToCenter() {
-        let statusBarHeight : CGFloat = 22
-        let searchTextFieldHeight : CGFloat = 30
-        let screenHeight = UIScreen.mainScreen().bounds.size.height
-        searchTextFiedVerticalSpaceConstraint.constant = (screenHeight-statusBarHeight-searchTextFieldHeight)/2
-        view.layoutIfNeeded()
-    }
-    
-    private func animateSearchTextFieldOnSearch() {
-        view.layoutIfNeeded();
-        
-        searchTextFiedVerticalSpaceConstraint.constant = 10;
-        UIView.animateWithDuration(0.5, animations: { () -> Void in
-            self.view.layoutIfNeeded()
-        });
-    }
-    
-    // MARK: - TableView Methods
-    
-    private func registerNib() {
-        let nibName = UINib(nibName: "NewsTableViewCell", bundle:nil)
-        newsTableView.registerNib(nibName, forCellReuseIdentifier: NewsTableViewCell.cellIdentfier())
-    }
-    
+}
+
+// MARK: - TableView Methods
+
+extension SearchViewController: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return self.newsArray.count
@@ -68,7 +41,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         
         let cell = tableView.dequeueReusableCellWithIdentifier(
-            NewsTableViewCell.cellIdentfier(), forIndexPath: indexPath) as! NewsTableViewCell
+            NewsTableViewCell.cellName, forIndexPath: indexPath) as! NewsTableViewCell
         
         let singleNews = newsArray[indexPath.row]
         cell.initWithNews(singleNews)
@@ -81,21 +54,23 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         UIApplication.sharedApplication().openURL(news.url)
     }
     
+}
+
+extension SearchViewController: UITextFieldDelegate {
+
     // MARK: - TextField Methods
     
     func textFieldShouldReturn(textField: UITextField) -> Bool {
-        let queryText = textField.text
-        textField.resignFirstResponder()
-        
-        searchResultsWithQuery(queryText)
-        
+        if let queryText = textField.text {
+            textField.resignFirstResponder()
+            searchResultsWithQuery(queryText)
+        }
         return true;
     }
     
     // MARK: - API Methods
     
     private func searchResultsWithQuery(query: String) {
-        animateSearchTextFieldOnSearch()
         
         SearchMethod.searchWithString(query: query) { (response) -> () in
             if response.isResponseOK() {

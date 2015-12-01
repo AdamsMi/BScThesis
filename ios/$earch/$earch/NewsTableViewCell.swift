@@ -3,20 +3,20 @@ import UIKit
 class NewsTableViewCell: UITableViewCell {
 
     @IBOutlet weak var newsTitleLabel: UILabel!
-    
     @IBOutlet weak var newsImageView: UIImageView!
+    
+    class var cellName: String {
+        get {
+            return "NewsTableViewCell"
+        }
+    }
     
     override func awakeFromNib() {
         super.awakeFromNib()
-        // Initialization code
     }
 
     override func setSelected(selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
-    }
-    
-    class func cellIdentfier() -> String {
-        return "NewsTableCell";
     }
     
     func initWithNews(news: News) {
