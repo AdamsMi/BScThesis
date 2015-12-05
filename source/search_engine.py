@@ -143,9 +143,10 @@ def fasterCorrelations(matrix, indices, vector,  amountOfDocuments):
 
 class SearchClient(object):
 
-    def __init__(self, calcSVD = True):
+    def __init__(self, dm, calcSVD = True):
 
         # Load all data
+        self.dm = dm
         self.matrix, self.amountOfWords, self.dictOfWords, \
         self.amountOfFiles, self.listOfArticles, self.idfs, \
         self.articleInvariants = loadData(DIR_MATRIX)
@@ -159,6 +160,8 @@ class SearchClient(object):
 
 
     def search(self, text, limit_clusters = False, clustering = None):
+        start = time.time()
+
         vector = text.split()
         cleanedVector = cleanVector(vector)
         bagOfWords, indices = createBagOfWordsFromVector(cleanedVector, self.amountOfWords, self.dictOfWords, self.idfs)
@@ -170,28 +173,29 @@ class SearchClient(object):
             bLimited = [artIndexesOfBestClusters[y[0]] for y in bLimited]
             print 'calculating limited indexes took: ', time.time() - start
         #else:
-        start = time.time()
         b = fasterCorrelations(self.matrix, indices, bagOfWords, self.amountOfFiles)
         print 'normal computations took: ', time.time() - start
-        r = []
 
-        for artInd in bLimited:
-            if artInd in [a[0] for a in b]:
-                r.append([l[0] for l in b].index(artInd))
-        print sorted(r)
-        dbMan = DatabaseManager()
+        # r = []
+        # for artInd in bLimited:
+        #     if artInd in [a[0] for a in b]:
+        #         r.append([l[0] for l in b].index(artInd))
+
+        # print sorted(r)
         results = []
+        dbMan = DatabaseManager()
         for x in b:
             results.append(dbMan.get_link(self.listOfArticles[x[0]]))
 
-        return results
+        stop = time.time()
+        return results, stop - start
 
 
     def getInitialClustering(self):
 
-        clustering = get_document_clustering(np.transpose(searchClient.matrix), fileName='')
+        clustering = get_document_clustering(np.transpose(self.matrix), fileName='')
         calculateCentroidsForClustering(clustering, clusteringName = '', mat = self.matrix)
-        freqWords = getFreqWordsForClustering(clustering, searchClient.dictOfWords, '', searchClient, dm)
+        freqWords = getFreqWordsForClustering(clustering, self.dictOfWords, '', self, self.dm)
 
         with open(DIR_CLUST_CENTROIDS + 'res_limited', 'rb') as input:
             categoriesClusters = pickle.load(input)
@@ -204,33 +208,65 @@ class SearchClient(object):
 
     def getClustering(self, drillDownPath):
 
+
         fileName = ''
+        formerFileName = ''
         for ind in drillDownPath:
+            formerFileName = fileName
             fileName+='_' + str(ind)
 
 
-        with open(CLUST_DIR + 'b' + fileName[:-2] + '.pickle',  'rb') as handle:
+        with open(CLUST_DIR + 'b' + formerFileName + '.pickle',  'rb') as handle:
             formerClust = pickle.load(handle)
 
         artNumbers = formerClust[drillDownPath[-1]]
 
         if len(artNumbers) <= 10:
-            return artNumbers
+            return [], []
 
         amountOfClusters = 12 if len(artNumbers)>30 else 6
-        clustering = get_document_clustering(np.transpose(searchClient.matrix[:,artNumbers]),
+        clustering = get_document_clustering(np.transpose(self.matrix[:,artNumbers]),
                                              fileName = fileName,
                                              actualIndexes = artNumbers,
                                              nrOfClusters = amountOfClusters)
         calculateCentroidsForClustering(clustering,
                                         clusteringName = fileName,
                                         mat = self.matrix)
-        freqWords =getFreqWordsForClustering(clustering, searchClient.dictOfWords, fileName, searchClient, dm)
+        freqWords =getFreqWordsForClustering(clustering, self.dictOfWords, fileName, self, self.dm)
 
         return clustering, freqWords
 
+
+    def getArticles(self, drillDownPath):
+
+        fileName = ''
+        formerFileName = ''
+        for ind in drillDownPath:
+            formerFileName = fileName
+            fileName+='_' + str(ind)
+
+        with open(CLUST_DIR + 'b' + formerFileName + '.pickle',  'rb') as handle:
+            formerClust = pickle.load(handle)
+
+        artNumbers = formerClust[drillDownPath[-1]]
+
+        results = []
+        dbMan = DatabaseManager()
+        for x in artNumbers:
+            results.append(dbMan.get_link(self.listOfArticles[x]))
+
+        return results
+
+
+
 if __name__ == '__main__':
-    searchClient = SearchClient()
-    dm = DatabaseManager
+    dm = DatabaseManager()
+    searchClient = SearchClient(dm)
     # clust, labels, words = searchClient.getInitialClustering()
     #clust, words = searchClient.getClustering([1])
+
+    while (True):
+        results, timeOfQuery = searchClient.search(raw_input("Input: "))
+
+        print "Search completed in ", timeOfQuery
+
