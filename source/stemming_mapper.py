@@ -5,7 +5,7 @@ import numpy
 
 from file_cleaner import cleaningOfWord, get_files_to_clean
 from collections import defaultdict
-from search_config import DIR_DUMP, DIR_STEMMING_MAP, DIR_CLUST_CENTROIDS, DIR_FREQ_WORDS
+from search_config import DIR_DUMP, DIR_STEMMING_MAP, DIR_CLUST_CENTROIDS, DIR_FREQ_WORDS, DIR_USED_WORDS
 
 
 def selectTopWordForCoreWord(ansDict, coreWord):
@@ -63,29 +63,52 @@ def getBestWordsForClusterAndCores(clustIndexes, cores, searchClient, dm):
                 ans[core] = currMap[core]
     return [selectTopWordForCoreWord(ans, core) for core in cores if core]
 
+
+def saveAlreadyUsedWords(drillDownPath, mapping, alreadyUsed):
+    for k,v in mapping.items():
+        with open(DIR_USED_WORDS + 'b' + drillDownPath + '_' + str(k), 'wb') as output:
+            pickle.dump(v + alreadyUsed, output)
+
+
 def getFreqWordsForClustering(clust, dictOfWords, drillDownPath, searchClient, dm):
 
     if os.path.exists(DIR_FREQ_WORDS + 'b' + drillDownPath):
         with open(DIR_FREQ_WORDS + 'b' + drillDownPath, 'rb') as input:
             return pickle.load(input)
-
+    if drillDownPath != '':
+        with open(DIR_USED_WORDS + 'b' + drillDownPath, 'rb') as input:
+            alreadyUsed = pickle.load(input)
+    else:
+        alreadyUsed = []
+    ansOfCores = {}
     ans = {}
     for k, v in clust.items():
+        print 'calculating {a} cluster'.format(a=k)
         wordsForClust = []
 
         with open(DIR_CLUST_CENTROIDS + 'b' + drillDownPath+ '_' + str(k)) as input:
             clust_centroid = pickle.load(input)
 
-        for nrOfWord in xrange(5):
+        while len(wordsForClust) < 4:
             ind = numpy.argmax(clust_centroid)
             for a,b in dictOfWords.items():
                 if b == ind:
-                    wordsForClust.append(a)
-                    break
+                    if a not in alreadyUsed:
+                        wordsForClust.append(a)
+                        break
+                    else:
+                        break
             clust_centroid[ind] = min(clust_centroid)
-        res= getBestWordsForClusterAndCores(v, wordsForClust, searchClient, dm)
+
+        ansOfCores[k] = wordsForClust
+        print wordsForClust
+        res = getBestWordsForClusterAndCores(v, wordsForClust, searchClient, dm)
         res = filter(lambda x: x, res)
+        print res
         ans[k] = res
+
+    saveAlreadyUsedWords(drillDownPath, ansOfCores, alreadyUsed)
+
     with open(DIR_FREQ_WORDS + 'b' + drillDownPath, 'wb') as output:
         pickle.dump(ans, output)
     return ans

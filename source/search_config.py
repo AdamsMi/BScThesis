@@ -40,3 +40,4 @@ NR_OF_CLUSTERS = 12
 #stemming mappings
 DIR_STEMMING_MAP = '../resources/word_core_mappings/'
 DIR_FREQ_WORDS = '../resources/freq_words/'
+DIR_USED_WORDS = '../resources/used_words/'
