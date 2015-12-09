@@ -8,9 +8,11 @@ import cPickle as pickle
 import scipy
 import time
 import scipy.sparse.linalg
+import networkx as nx
 
 from file_cleaner import cleaningOfWord
 from search_config import  DIR_MATRIX, NUMBER_OF_ARTICLES, DIR_FILES, NGRAM_SIZE
+from efficiencydefs import globalefficiency
 from collections import defaultdict
 
 def normalization(matrix, amountOfDocuments):
@@ -62,25 +64,31 @@ def idf(matrix, numberOfArticles, dictOfTermOccurrences, listOfWords):
 
 def gatherAllNGramsFromArticles(listOfArticles, pathToArticles):
 
-    ngram_index = 0
-    articlesNgramsVectors =[]
     articleInvarints = []
+    articlesProcessed = 0
 
     for currentFileName in listOfArticles:
+        articlesProcessed+=1
+        if articlesProcessed%100 == 0:
+            print "Ngrams gathered from: ", articlesProcessed
+
+
+        ngram_index = 0
         ngramsDictionary = dict()
+
         with open(pathToArticles + currentFileName) as currentFile:
 
-            title = currentFile.read()
+            content = currentFile.read()
+            ngramGraph = nx.DiGraph()
 
-            ngramVector = []
-
-            titleCleared = ""
-            for word in title.split():
+            contentCleared = ""
+            for word in content.split():
                 cleanedWord = cleaningOfWord(word)
                 if cleanedWord is not None:
-                    titleCleared+=cleanedWord + " "
+                    contentCleared+=cleanedWord + " "
 
-            text = titleCleared.split(" ")
+            text = contentCleared.split(" ")
+            lastNode = None
             for k in range (0, len(text)-NGRAM_SIZE+1):
                 window = ""
                 start = k
@@ -91,15 +99,40 @@ def gatherAllNGramsFromArticles(listOfArticles, pathToArticles):
                     else:
                         window = window + " " + text[i]
 
+                node = None
                 if ngramsDictionary.has_key(window):
-                    ngramVector.append(ngramsDictionary[window])
+                    node = ngramsDictionary[window]
                 else:
-
+                    node = ngram_index
                     ngramsDictionary[window] = ngram_index
-                    ngramVector.append(ngram_index)
                     ngram_index += 1
 
-            articleInvarints.append((len(ngramVector), len(set(ngramVector))))
+                if lastNode:
+                    ngramGraph.add_edge(lastNode, node)
+
+                lastNode = node
+
+
+            undirectedGraph = nx.Graph(ngramGraph)
+
+            efficiency = False
+
+            if efficiency:
+                articleInvarints.append((
+                    ngramGraph.number_of_nodes(),
+                    ngramGraph.number_of_edges(),
+                    nx.number_strongly_connected_components(ngramGraph),
+                    nx.average_clustering(undirectedGraph),
+                    globalefficiency(undirectedGraph)
+                ))
+            else:
+                articleInvarints.append((
+                    ngramGraph.number_of_nodes(),
+                    ngramGraph.number_of_edges(),
+                    nx.number_strongly_connected_components(ngramGraph),
+                    nx.average_clustering(undirectedGraph)
+                ))
+
 
     return articleInvarints
 
@@ -178,6 +211,8 @@ def writeDataToFile(matrix, dictOfThingsToDump):
 
 if __name__ == '__main__':
 
+    only_ngrams = True
+
     print "Imports done"
 
     listOfArticleFiles = filter(lambda x: x[0] != '.',sorted(os.listdir(DIR_FILES)))
@@ -192,6 +227,16 @@ if __name__ == '__main__':
     start = time.time()
     articleInvarints = gatherAllNGramsFromArticles(listOfArticleFiles, DIR_FILES)
     stop = time.time()
+
+    print "Gathering n-grams done, took: ", stop-start, " seconds"
+
+    if only_ngrams:
+        start = time.time()
+        with open(DIR_MATRIX + "articleInvariants" + '.pkl', 'wb') as output:
+            pickle.dump(articleInvarints, output)
+        stop = time.time()
+        print "Writing to file done, took: ", stop - start, " seconds\n"
+        exit()
 
     print "Gathering n-grams done, took: ", stop-start, " seconds"
 

@@ -54,10 +54,6 @@ def articles():
     print "Received cluster ID", clusterId
 
     if clusterId == None:
-
-
-        print "ASD2"
-
         return jsonify({
             "status": "OK",
             "result":[],
@@ -66,9 +62,6 @@ def articles():
     else:
         path = [int(x) for x in clusterId.split('_')]
         result = searchClient.getArticles(path)
-
-        print "ASD"
-        print result
 
         return jsonify({
             "status": "OK",

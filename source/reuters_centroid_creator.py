@@ -21,6 +21,9 @@ def getSavedThings(directory):
     with open(directory + 'idfs.pkl', 'rb') as inputFile:
         idfs = pickle.load(inputFile)
 
+    with open(directory + 'articleInvariants.pkl', 'rb') as inputFile:
+        idfs = pickle.load(inputFile)
+
     return amountOfWords, mapOfWords, idfs
 
 
@@ -100,7 +103,7 @@ def calcIdf(bow, idfs, amountOfWords):
 
 def createCentroidForCategory(category):
     filesAboutCategory = dbManager.get_by_category(category)
-    amountOfWords, dictOfWords, idfs = getSavedThings(DIR_MATRIX)
+    amountOfWords, dictOfWords, idfs, ngrams = getSavedThings(DIR_MATRIX)
 
     a = numpy.zeros((amountOfWords, 1), float)
     aOfFiles = len(filesAboutCategory)

@@ -194,7 +194,8 @@ class SearchClient(object):
     def getInitialClustering(self):
 
         clustering = get_document_clustering(np.transpose(self.matrix), fileName='')
-        calculateCentroidsForClustering(clustering, clusteringName = '', mat = self.matrix)
+        calculateCentroidsForClustering(clustering, clusteringName = '',
+                                        mat = self.matrix, ngramsMat=self.articleInvariants)
         freqWords = getFreqWordsForClustering(clustering, self.dictOfWords, '', self, self.dm)
 
         with open(DIR_CLUST_CENTROIDS + 'res_limited', 'rb') as input:
@@ -231,7 +232,8 @@ class SearchClient(object):
                                              nrOfClusters = amountOfClusters)
         calculateCentroidsForClustering(clustering,
                                         clusteringName = fileName,
-                                        mat = self.matrix)
+                                        mat = self.matrix,
+                                        ngramsMat=self.articleInvariants)
         freqWords =getFreqWordsForClustering(clustering, self.dictOfWords, fileName, self, self.dm)
 
         return clustering, freqWords
