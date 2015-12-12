@@ -5,7 +5,7 @@ import time
 import numpy
 from database_manager   import DatabaseManagerReuters
 from scipy.sparse       import csr_matrix, csc_matrix
-from search_config      import DIR_TOPIC_CODES, DIR_FILES_REUTERS, DIR_MATRIX, DIR_CENTROIDS2, DIR_CENTROIDS
+from search_config      import DIR_TOPIC_CODES, DIR_FILES_REUTERS, DIR_MATRIX, DIR_CENTROIDS
 from search_config      import DIR_BOWS
 dbManager = DatabaseManagerReuters()
 
@@ -50,7 +50,7 @@ def saveCentroidOfCategory(centroid, catName):
     :param centroid: calculated centroid
     :param catName: category name
     '''
-    with open(DIR_CENTROIDS2 + catName, 'wb') as writeFile:
+    with open(DIR_CENTROIDS + catName, 'wb') as writeFile:
         pickle.dump(centroid, writeFile)
 
 
@@ -132,24 +132,51 @@ def normalizeCentroid(centroid):
         s += centroid[x,0] * centroid[x,0]
     return centroid
 
+
+def createNgramCentroidForCategory(category):
+    filesAboutCategory = dbManager.get_by_category(category)
+    amountOfWords, dictOfWords, idfs, ngrams = getSavedThings(DIR_MATRIX)
+
+    aOfFiles = len(filesAboutCategory)
+    for fileName in filesAboutCategory:
+        fileName = str(fileName).replace('.xml', '')
+        bow = getSavedBow(fileName)
+        if bow is None:
+            print 'skipped', fileName
+            aOfFiles -=1
+            continue
+        c,b = bow.nonzero()
+        for x in b:
+            a[x,0] += bow[0,x]
+
+    return calcIdf(a, idfs, amountOfWords) / float(aOfFiles)
+
+
+
 if __name__ == '__main__':
 
+    ngramsCentroids = True
+
     cats = getArticlesForAllCategories()
-    #
-    # print cats
-
-
-    currDone = os.listdir(DIR_CENTROIDS2)
+    currDone = os.listdir(DIR_CENTROIDS)
 
     for cat in cats:
         if cat[0] not in currDone:
             if cat[1]>0:
+
                 start = time.time()
-                print 'creating centroid for category: ', cat[0], ': ', cat[1]
-                ans = createCentroidForCategory(cat[0])
-                ans = csc_matrix(ans)
-                ans = normalizeCentroid(ans)
-                saveCentroidOfCategory(ans, cat[0])
+                if ngramsCentroids:
+                    print 'creating ngram centroid for category', cat[0], ': ', cat[1]
+
+
+                else:
+
+                    print 'creating centroid for category: ', cat[0], ': ', cat[1]
+                    ans = createCentroidForCategory(cat[0])
+                    ans = csc_matrix(ans)
+                    ans = normalizeCentroid(ans)
+                    saveCentroidOfCategory(ans, cat[0])
+
                 print 'finished, took: ', time.time() - start
         else:
             print cat[0]

@@ -118,25 +118,25 @@ def gatherAllNGramsFromArticles(listOfArticles, pathToArticles):
 
             undirectedGraph = nx.Graph(ngramGraph)
 
-            efficiency = False
+            numberOfNodes = ngramGraph.number_of_nodes()
+            numberOfEdges = ngramGraph.number_of_edges()
+            connectedComponents = nx.number_strongly_connected_components(ngramGraph)
+            try:
+                averageClustering = nx.average_clustering(undirectedGraph)
+            except:
+                print "Error with ", currentFileName, " nodes: ", numberOfNodes, " edges ", numberOfEdges
+                
+            kurt = kurtosis(ngramVector)
+            skewness = skew(ngramVector)
 
-            if efficiency:
-                articleInvarints.append((
-                    ngramGraph.number_of_nodes(),
-                    ngramGraph.number_of_edges(),
-                    nx.number_strongly_connected_components(ngramGraph),
-                    nx.average_clustering(undirectedGraph),
-                    globalefficiency(undirectedGraph)
-                ))
-            else:
-                articleInvarints.append((
-                    ngramGraph.number_of_nodes(),
-                    ngramGraph.number_of_edges(),
-                    nx.number_strongly_connected_components(ngramGraph),
-                    nx.average_clustering(undirectedGraph),
-                    kurtosis(ngramVector),
-                    skew(ngramVector)
-                ))
+            articleInvarints.append((
+                numberOfNodes,
+                numberOfEdges,
+                connectedComponents,
+                averageClustering,
+                kurt,
+                skewness
+            ))
 
 
     return articleInvarints
