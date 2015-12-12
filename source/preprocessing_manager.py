@@ -124,8 +124,9 @@ def gatherAllNGramsFromArticles(listOfArticles, pathToArticles):
             try:
                 averageClustering = nx.average_clustering(undirectedGraph)
             except:
+                averageClustering  = 0
                 print "Error with ", currentFileName, " nodes: ", numberOfNodes, " edges ", numberOfEdges
-                
+
             kurt = kurtosis(ngramVector)
             skewness = skew(ngramVector)
 
