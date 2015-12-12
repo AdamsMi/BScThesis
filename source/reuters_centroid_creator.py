@@ -21,9 +21,6 @@ def getSavedThings(directory):
     with open(directory + 'idfs.pkl', 'rb') as inputFile:
         idfs = pickle.load(inputFile)
 
-    with open(directory + 'articleInvariants.pkl', 'rb') as inputFile:
-        idfs = pickle.load(inputFile)
-
     return amountOfWords, mapOfWords, idfs
 
 
@@ -139,17 +136,19 @@ def normalizeCentroid(centroid):
 
 
 def createNgramCentroidForCategory(category):
-    filesAboutCategory = dbManager.get_by_category(category)
-    amountOfWords, dictOfWords, idfs, ngrams = getSavedThings(DIR_MATRIX)
+    with open(DIR_MATRIX + 'articleInvariants.pkl', 'rb') as inputFile:
 
-    centroid = numpy.zeros(6)
-    aOfFiles = len(filesAboutCategory)
+        ngrams = pickle.load(inputFile)
+        filesAboutCategory = dbManager.get_by_category(category)
 
-    for fileName in filesAboutCategory:
-        index = listOfArticleRouterFiles.index(fileName)
-        invariants = ngrams[index]
-        for i in xrange(0,6):
-            centroid[i] += invariants[i]
+        centroid = numpy.zeros(6)
+        aOfFiles = len(filesAboutCategory)
+
+        for fileName in filesAboutCategory:
+            index = listOfArticleRouterFiles.index(fileName)
+            invariants = ngrams[index]
+            for i in xrange(0,6):
+                centroid[i] += invariants[i]
 
     return centroid/aOfFiles
 
