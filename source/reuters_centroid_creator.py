@@ -154,7 +154,8 @@ def createNgramCentroidForCategory(category):
                 continue
 
 
-    print centroid/aOfFiles
+    print centroid
+    print centroid/float(aOfFiles)
 
     return centroid/aOfFiles
 
