@@ -5,7 +5,7 @@ import time
 import numpy
 from database_manager   import DatabaseManagerReuters
 from scipy.sparse       import csr_matrix, csc_matrix
-from search_config      import DIR_TOPIC_CODES, DIR_FILES_REUTERS, DIR_MATRIX, DIR_CENTROIDS
+from search_config      import DIR_TOPIC_CODES, DIR_FILES, DIR_MATRIX, DIR_CENTROIDS
 from search_config      import DIR_BOWS
 dbManager = DatabaseManagerReuters()
 
@@ -50,7 +50,7 @@ def saveCentroidOfCategory(centroid, catName):
     :param centroid: calculated centroid
     :param catName: category name
     '''
-    with open(DIR_CENTROIDS + catName, 'wb') as writeFile:
+    with open(DIR_CENTROIDS + catName + "_ngram", 'wb') as writeFile:
         pickle.dump(centroid, writeFile)
 
 
@@ -137,19 +137,16 @@ def createNgramCentroidForCategory(category):
     filesAboutCategory = dbManager.get_by_category(category)
     amountOfWords, dictOfWords, idfs, ngrams = getSavedThings(DIR_MATRIX)
 
+    centroid = numpy.zeros(6)
     aOfFiles = len(filesAboutCategory)
-    for fileName in filesAboutCategory:
-        fileName = str(fileName).replace('.xml', '')
-        bow = getSavedBow(fileName)
-        if bow is None:
-            print 'skipped', fileName
-            aOfFiles -=1
-            continue
-        c,b = bow.nonzero()
-        for x in b:
-            a[x,0] += bow[0,x]
 
-    return calcIdf(a, idfs, amountOfWords) / float(aOfFiles)
+    for fileName in filesAboutCategory:
+        index = listOfArticleRouterFiles.index(fileName)
+        invariants = ngrams[index]
+        for i in xrange(0,6):
+            centroid[i] += invariants[i]
+
+    return centroid/aOfFiles
 
 
 
@@ -167,8 +164,9 @@ if __name__ == '__main__':
                 start = time.time()
                 if ngramsCentroids:
                     print 'creating ngram centroid for category', cat[0], ': ', cat[1]
-
-
+                    listOfArticleRouterFiles = filter(lambda x: x[0] != '.',sorted(os.listdir(DIR_FILES)))
+                    centroid = createNgramCentroidForCategory(cat[0])
+                    saveCentroidOfCategory(centroid, cat[0])
                 else:
 
                     print 'creating centroid for category: ', cat[0], ': ', cat[1]
@@ -180,22 +178,3 @@ if __name__ == '__main__':
                 print 'finished, took: ', time.time() - start
         else:
             print cat[0]
-
-#
-
-
-#
-# with open(DIR_CENTROIDS+ 'c16') as input:
-#    gwelf_centroid = pickle.load(input)
-#
-#
-# print gwelf_centroid
-# print type(gwelf_centroid)
-#
-#
-# with open(DIR_CENTROIDS2+ 'c16') as input:
-#    gwelf_centroid = pickle.load(input)
-#
-#
-# print gwelf_centroid
-# print type(gwelf_centroid)
