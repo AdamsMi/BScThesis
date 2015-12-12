@@ -145,10 +145,16 @@ def createNgramCentroidForCategory(category):
         aOfFiles = len(filesAboutCategory)
 
         for fileName in filesAboutCategory:
-            index = listOfArticleRouterFiles.index(fileName)
-            invariants = ngrams[index]
-            for i in xrange(0,6):
-                centroid[i] += invariants[i]
+            try:
+                index = listOfArticleRouterFiles.index(fileName)
+                invariants = ngrams[index]
+                for i in xrange(0,6):
+                    centroid[i] += invariants[i]
+            except:
+                continue
+
+
+    print centroid/aOfFiles
 
     return centroid/aOfFiles
 
