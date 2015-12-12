@@ -5,7 +5,7 @@ import time
 import numpy
 from database_manager   import DatabaseManagerReuters
 from scipy.sparse       import csr_matrix, csc_matrix
-from search_config      import DIR_TOPIC_CODES, DIR_FILES, DIR_MATRIX, DIR_CENTROIDS
+from search_config      import DIR_TOPIC_CODES, DIR_FILES, DIR_MATRIX, DIR_CENTROIDS, DIR_CENTROIDS_NGRAMS
 from search_config      import DIR_BOWS
 dbManager = DatabaseManagerReuters()
 
@@ -50,8 +50,13 @@ def saveCentroidOfCategory(centroid, catName):
     :param centroid: calculated centroid
     :param catName: category name
     '''
-    with open(DIR_CENTROIDS + catName + "_ngram", 'wb') as writeFile:
-        pickle.dump(centroid, writeFile)
+    if  ngramsCentroids:
+        with open(DIR_CENTROIDS_NGRAMS + catName, 'wb') as writeFile:
+            pickle.dump(centroid, writeFile)
+    else:
+        with open(DIR_CENTROIDS + catName, 'wb') as writeFile:
+            pickle.dump(centroid, writeFile)
+
 
 
 def splitAndCleanLine(line):
@@ -155,7 +160,11 @@ if __name__ == '__main__':
     ngramsCentroids = True
 
     cats = getArticlesForAllCategories()
-    currDone = os.listdir(DIR_CENTROIDS)
+
+    if ngramsCentroids:
+        currDone = os.listdir(DIR_CENTROIDS_NGRAMS)
+    else:
+        currDone = os.listdir(DIR_CENTROIDS)
 
     for cat in cats:
         if cat[0] not in currDone:
@@ -177,4 +186,4 @@ if __name__ == '__main__':
 
                 print 'finished, took: ', time.time() - start
         else:
-            print cat[0]
+            print "Done:, ", cat[0]

@@ -29,6 +29,7 @@ NGRAM_SIZE = 2
 #reuters
 DIR_TOPIC_CODES = '../resources/topic_codes.txt'
 DIR_CENTROIDS = '../resources/reuters_centroids/'
+DIR_CENTROIDS_NGRAMS = '../resources/reuters_centroids_ngrams/'
 DIR_BOWS = '../resources/bows_reuters/'
 
 #k_means
