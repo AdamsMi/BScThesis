@@ -11,6 +11,7 @@ import scipy.sparse.linalg
 import networkx as nx
 
 from file_cleaner import cleaningOfWord
+from scipy.stats import skew, kurtosis
 from search_config import  DIR_MATRIX, NUMBER_OF_ARTICLES, DIR_FILES, NGRAM_SIZE
 from efficiencydefs import globalefficiency
 from collections import defaultdict
@@ -80,6 +81,7 @@ def gatherAllNGramsFromArticles(listOfArticles, pathToArticles):
 
             content = currentFile.read()
             ngramGraph = nx.DiGraph()
+            ngramVector = []
 
             contentCleared = ""
             for word in content.split():
@@ -99,7 +101,7 @@ def gatherAllNGramsFromArticles(listOfArticles, pathToArticles):
                     else:
                         window = window + " " + text[i]
 
-                node = None
+
                 if ngramsDictionary.has_key(window):
                     node = ngramsDictionary[window]
                 else:
@@ -110,6 +112,7 @@ def gatherAllNGramsFromArticles(listOfArticles, pathToArticles):
                 if lastNode:
                     ngramGraph.add_edge(lastNode, node)
 
+                ngramVector.append(node)
                 lastNode = node
 
 
@@ -130,11 +133,53 @@ def gatherAllNGramsFromArticles(listOfArticles, pathToArticles):
                     ngramGraph.number_of_nodes(),
                     ngramGraph.number_of_edges(),
                     nx.number_strongly_connected_components(ngramGraph),
-                    nx.average_clustering(undirectedGraph)
+                    nx.average_clustering(undirectedGraph),
+                    kurtosis(ngramVector),
+                    skew(ngramVector)
                 ))
 
 
     return articleInvarints
+
+def normalizeNgrams(articleInvartiants):
+
+    scaledArticleInvariants = []
+
+    nodesMax = max(articleInvarints, key=lambda item:item[0])[0]
+    nodesMin = min(articleInvarints, key=lambda item:item[0])[0]
+
+    edgesMax = max(articleInvarints, key=lambda item:item[1])[1]
+    edgesMin = min(articleInvarints, key=lambda item:item[1])[1]
+
+    componentsMax = max(articleInvarints, key=lambda item:item[2])[2]
+    componentsMin = min(articleInvarints, key=lambda item:item[2])[2]
+
+    clusteringMax = max(articleInvarints, key=lambda item:item[3])[3]
+    clusteringMin = min(articleInvarints, key=lambda item:item[3])[3]
+
+    kurtosisMax = max(articleInvarints, key=lambda item:item[4])[4]
+    kurtosisMin = min(articleInvarints, key=lambda item:item[4])[4]
+
+    skwenessMax = max(articleInvarints, key=lambda item:item[5])[5]
+    skewnessMin = min(articleInvarints, key=lambda item:item[5])[5]
+
+    print nodesMax, nodesMin
+
+    for invariant in articleInvarints:
+        scaledArticleInvariants.append(
+            (scale(invariant[0], nodesMax, nodesMin),
+             scale(invariant[1], edgesMax, edgesMin),
+             scale(invariant[2], componentsMax, componentsMin),
+             scale(invariant[3], clusteringMax, clusteringMin),
+             scale(invariant[4], kurtosisMax, kurtosisMin),
+             scale(invariant[5], skwenessMax, skewnessMin))
+        )
+
+    return scaledArticleInvariants
+
+
+def scale(value, maxValue, minValue):
+    return float(value - minValue)/float(maxValue - minValue)
 
 
 def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
@@ -215,7 +260,7 @@ if __name__ == '__main__':
 
     print "Imports done"
 
-    listOfArticleFiles = filter(lambda x: x[0] != '.',sorted(os.listdir(DIR_FILES)))
+    listOfArticleFiles = filter(lambda x: x[0] != '.',sorted(os.listdir(DIR_FILES)))[:100]
     amountOfFiles = len(listOfArticleFiles)
 
     print "Amount of files: ", amountOfFiles
@@ -226,6 +271,7 @@ if __name__ == '__main__':
 
     start = time.time()
     articleInvarints = gatherAllNGramsFromArticles(listOfArticleFiles, DIR_FILES)
+    articleInvarints = normalizeNgrams(articleInvarints)
     stop = time.time()
 
     print "Gathering n-grams done, took: ", stop-start, " seconds"
@@ -237,8 +283,6 @@ if __name__ == '__main__':
         stop = time.time()
         print "Writing to file done, took: ", stop - start, " seconds\n"
         exit()
-
-    print "Gathering n-grams done, took: ", stop-start, " seconds"
 
     start = time.time()
     setOfWords , mapOfWords, matrix, dictOfTermOccurrences, listOfWords= gatherAllWordsFromArticles(listOfArticleFiles, DIR_FILES)
