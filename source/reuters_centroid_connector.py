@@ -20,7 +20,7 @@ for centroid in currDone:
 
                 print "Centroid shape before: ", centroidBow.shape
 
-                np.append(centroidBow, centroidNgram)
+                centroidBow = np.append(centroidBow, centroidNgram)
 
                 print "Centroid shapre after: ", centroidBow.shape
 
