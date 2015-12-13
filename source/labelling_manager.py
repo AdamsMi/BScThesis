@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 
 from database_manager   import DatabaseManager
-from search_config      import DIR_CENTROIDS2
+from search_config      import DIR_CENTROIDS
 from scipy.sparse       import csc_matrix
 from search_config      import DIR_MATRIX, DIR_CLUST_CENTROIDS
 from search_engine      import sparseLowRankAppr

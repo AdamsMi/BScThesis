@@ -153,10 +153,17 @@ class SearchClient(object):
         start = time.time()
         if calcSVD:
             self.matrix = sparseLowRankAppr(self.matrix, RANK_OF_APPROXIMATION)
+            self.extendedMatrix = np.zeros((self.matrix.shape[0]+6, self.matrix.shape[1]))
 
+
+            for i in xrange(0, len(self.articleInvariants)):
+                self.extendedMatrix[:, i] = (np.append(self.matrix[:, i], self.articleInvariants[i]))
+
+            print 'matrix shape: ', self.matrix.shape
+            print 'matrix shape: ', self.extendedMatrix.shape
+            print 'invariants shape: ', np.array(self.articleInvariants).shape
             print "Data loaded from files & Matrix built\n"
             print 'SVD took: ', time.time() - start
-            print 'matrix shape: ', self.matrix.shape
 
 
     def search(self, text, limit_clusters = False, clustering = None):
@@ -193,9 +200,9 @@ class SearchClient(object):
 
     def getInitialClustering(self):
 
-        clustering = get_document_clustering(np.transpose(self.matrix), fileName='')
+        clustering = get_document_clustering(np.transpose(self.extendedMatrix), fileName='')
         calculateCentroidsForClustering(clustering, clusteringName = '',
-                                        mat = self.matrix, ngramsMat=self.articleInvariants)
+                                        mat = self.extendedMatrix)
         freqWords = getFreqWordsForClustering(clustering, self.dictOfWords, '', self, self.dm)
 
         with open(DIR_CLUST_CENTROIDS + 'res_limited', 'rb') as input:
@@ -226,14 +233,13 @@ class SearchClient(object):
             return [], []
 
         amountOfClusters = 12 if len(artNumbers)>30 else 6
-        clustering = get_document_clustering(np.transpose(self.matrix[:,artNumbers]),
+        clustering = get_document_clustering(np.transpose(self.extendedMatrix[:,artNumbers]),
                                              fileName = fileName,
                                              actualIndexes = artNumbers,
                                              nrOfClusters = amountOfClusters)
         calculateCentroidsForClustering(clustering,
                                         clusteringName = fileName,
-                                        mat = self.matrix,
-                                        ngramsMat=self.articleInvariants)
+                                        mat = self.extendedMatrix)
         freqWords =getFreqWordsForClustering(clustering, self.dictOfWords, fileName, self, self.dm)
 
         return clustering, freqWords
@@ -264,11 +270,11 @@ class SearchClient(object):
 if __name__ == '__main__':
     dm = DatabaseManager()
     searchClient = SearchClient(dm)
-    # clust, labels, words = searchClient.getInitialClustering()
+    clust, labels, words = searchClient.getInitialClustering()
     #clust, words = searchClient.getClustering([1])
 
-    while (True):
-        results, timeOfQuery = searchClient.search(raw_input("Input: "))
-
-        print "Search completed in ", timeOfQuery
+    # while (True):
+    #     results, timeOfQuery = searchClient.search(raw_input("Input: "))
+    #
+    #     print "Search completed in ", timeOfQuery
 

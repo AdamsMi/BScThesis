@@ -261,7 +261,7 @@ if __name__ == '__main__':
 
     print "Imports done"
 
-    listOfArticleFiles = filter(lambda x: x[0] != '.',sorted(os.listdir(DIR_FILES)))[:100]
+    listOfArticleFiles = filter(lambda x: x[0] != '.',sorted(os.listdir(DIR_FILES)))
     amountOfFiles = len(listOfArticleFiles)
 
     print "Amount of files: ", amountOfFiles
