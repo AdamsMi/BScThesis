@@ -1,18 +1,19 @@
 import time
 import pickle
 import numpy as np
+import webbrowser
 
-from database_manager   import DatabaseManager
-from sparsesvd          import sparsesvd
-from search_config      import NGRAM_SIZE, CLUST_DIR
-from scipy.sparse       import csc_matrix, lil_matrix
-from file_cleaner       import cleaningOfWord
-from search_config      import RANK_OF_APPROXIMATION, NUMBER_OF_RESULTS
-from search_config      import DIR_MATRIX, DIR_CLUST_CENTROIDS
-from k_means import get_document_clustering
-from stemming_mapper import getFreqWordsForClustering
-from tester import getBestClustersForQuery
-from k_means_centroid_manager import calculateCentroidsForClustering
+from database_manager           import DatabaseManager
+from sparsesvd                  import sparsesvd
+from search_config              import NGRAM_SIZE, CLUST_DIR
+from scipy.sparse               import csc_matrix, lil_matrix
+from file_cleaner               import cleaningOfWord
+from search_config              import RANK_OF_APPROXIMATION, NUMBER_OF_RESULTS
+from search_config              import DIR_MATRIX, DIR_CLUST_CENTROIDS
+from k_means                    import get_document_clustering
+from stemming_mapper            import getFreqWordsForClustering
+from lda_transformation         import getLDAModel
+from k_means_centroid_manager   import calculateCentroidsForClustering
 
 
 def sparseLowRankAppr(matrix, rank):
@@ -82,7 +83,7 @@ def cleanVector(vector):
     return cleanedVector
 
 
-def createBagOfWordsFromVector(vector, amountOfTerms, dictionary, idfs):
+def createBagOfWordsFromVector(vector, amountOfTerms, dictionary, idfs=None):
     bagOfWords = lil_matrix((1, amountOfTerms), dtype=float)
     indices = []
     for x in vector:
@@ -95,6 +96,19 @@ def createBagOfWordsFromVector(vector, amountOfTerms, dictionary, idfs):
             continue
     bagOfWords = csc_matrix(bagOfWords, dtype=float)
     return bagOfWords, indices
+
+
+
+def createBagOfWordsForLDA(vector, amountOfTerms, dictionary):
+    bow = np.zeros((1, amountOfTerms), float)
+    for word in vector:
+        try:
+            ind = dictionary[word]
+            bow[0, ind] += 1
+        except:
+            continue
+    print bow.shape
+    return bow
 
 def createNgramsVectorForWord(vector, ngramsDictionary):
     nGramsVector = []
@@ -143,7 +157,7 @@ def fasterCorrelations(matrix, indices, vector,  amountOfDocuments):
 
 class SearchClient(object):
 
-    def __init__(self, dm, calcSVD = True):
+    def __init__(self, dm, calcSVD = True, calcLDA = True):
 
         # Load all data
         self.dm = dm
@@ -151,6 +165,14 @@ class SearchClient(object):
         self.amountOfFiles, self.listOfArticles, self.idfs, \
         self.articleInvariants = loadData(DIR_MATRIX)
         start = time.time()
+
+        # dbMan = DatabaseManager()
+        # for ind, el in enumerate(self.listOfArticles):
+        #     title = dbMan.get_link(el).title
+        #     if 'Webchat' in title:
+        #         print title
+        #         print el
+
         if calcSVD:
             self.matrix = sparseLowRankAppr(self.matrix, RANK_OF_APPROXIMATION)
 
@@ -158,34 +180,68 @@ class SearchClient(object):
             print 'SVD took: ', time.time() - start
             print 'matrix shape: ', self.matrix.shape
 
+        if calcLDA:
+            self.model, self.wordsToAsk = getLDAModel()
 
-    def search(self, text, limit_clusters = False, clustering = None):
+            start = time.time()
+            print 'LDA model built'
+            print 'Fitting LDA model took: ', time.time() - start
+
+            #print 'topic word shape', self.model.topic_word_.shape
+            #print 'doc topic shape', self.model.doc_topic_.shape
+
+
+    def search(self, text, isSvd = False):
         start = time.time()
-
         vector = text.split()
         cleanedVector = cleanVector(vector)
-        bagOfWords, indices = createBagOfWordsFromVector(cleanedVector, self.amountOfWords, self.dictOfWords, self.idfs)
-        if limit_clusters:
-            start = time.time()
-            bestClusters = [x[0] for x in getBestClustersForQuery(bagOfWords)]
-            artIndexesOfBestClusters = sorted(sum([clustering[ind] for ind in bestClusters], []))
-            bLimited = fasterCorrelations(self.matrix[:, artIndexesOfBestClusters], indices, bagOfWords, len(artIndexesOfBestClusters))
-            bLimited = [artIndexesOfBestClusters[y[0]] for y in bLimited]
-            print 'calculating limited indexes took: ', time.time() - start
-        #else:
-        b = fasterCorrelations(self.matrix, indices, bagOfWords, self.amountOfFiles)
-        print 'normal computations took: ', time.time() - start
+        #cleanedVector = self.wordsToAsk
 
-        # r = []
-        # for artInd in bLimited:
-        #     if artInd in [a[0] for a in b]:
-        #         r.append([l[0] for l in b].index(artInd))
+        print cleanedVector
 
-        # print sorted(r)
+        if isSvd:
+            bagOfWords, indices = createBagOfWordsFromVector(cleanedVector, self.amountOfWords, self.dictOfWords, self.idfs)
+            b = fasterCorrelations(self.matrix, indices, bagOfWords, self.amountOfFiles)
+
+        else:
+            bagOfWords = createBagOfWordsForLDA(cleanedVector, self.amountOfWords, self.dictOfWords)
+
+            #print 'bow shape:'
+            #print bagOfWords.shape
+
+            #print 'topic word shape:'
+            #print np.transpose(self.model.topic_word_).shape
+            res = np.dot(bagOfWords, np.transpose(self.model.topic_word_))
+
+            #print 'first mul shape:'
+            #print res.shape
+            #print res
+            #print 'doc topic shape:'
+            #print np.transpose(self.model.doc_topic_).shape
+
+            res2 = np.dot(res, np.transpose(self.model.doc_topic_))
+
+            #print 'final shape:'
+            #print res2.shape
+
+            bestValues = sorted(list(res2[0]), reverse=True)[:5]
+
+            b = []
+
+            for bestVal in bestValues:
+                for ind, val in enumerate(list(res2[0])):
+                    if val == bestVal:
+                        b.append((ind, val))
+
+
         results = []
         dbMan = DatabaseManager()
         for x in b:
             results.append(dbMan.get_link(self.listOfArticles[x[0]]))
+
+        for res in results:
+            print res.url
+            print res.title
 
         stop = time.time()
         return results, stop - start
@@ -264,11 +320,22 @@ class SearchClient(object):
 if __name__ == '__main__':
     dm = DatabaseManager()
     searchClient = SearchClient(dm)
-    # clust, labels, words = searchClient.getInitialClustering()
-    #clust, words = searchClient.getClustering([1])
+    #clust, labels, words = searchClient.getInitialClustering()
+    #print words
+    #clust, words = searchClient.getClustering([0])
+    #print clust
+    #print words
 
-    while (True):
-        results, timeOfQuery = searchClient.search(raw_input("Input: "))
+    #searchClient.search('David cameron uk immigrants')
+
+
+    a= 1
+    while (a>0):
+        results, timeOfQuery = searchClient.search('David cameron uk immigrants', isSvd=True)
 
         print "Search completed in ", timeOfQuery
 
+        results, timeOfQuery = searchClient.search('David cameron uk immigrants')
+
+        print "Search completed in ", timeOfQuery
+        a-=1
