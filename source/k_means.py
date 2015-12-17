@@ -1,3 +1,4 @@
+from copy import copy
 import random
 import numpy as np
 import os
@@ -20,6 +21,36 @@ def assign_to_clusters(elements, centroids):
         clIndex = min([(i[0], np.linalg.norm(x-centroids[i[0]])) for i in enumerate(centroids)], key=lambda t:t[1])[0]
         clusters[clIndex].append(x)
     return clusters
+
+def nearest_cluster_center(point, centroids):
+    cl = min([(i[0], np.linalg.norm(point-centroids[i[0]])) for i in enumerate(centroids)], key=lambda t:t[1])
+    return cl
+
+
+def kpp(points, centersNr):
+    cluster_centers = [copy(random.choice(points))]
+    d = [0.0 for _ in xrange(len(points))]
+
+    for i in xrange(1, centersNr):
+        sum = 0
+        for j, p in enumerate(points):
+            d[j] = nearest_cluster_center(p, cluster_centers[:i])[1]
+            sum += d[j]
+
+        sum *= random.random()
+
+        for j, di in enumerate(d):
+            sum -= di
+            if sum > 0:
+                continue
+            cluster_centers.append(copy(points[j]))
+            break
+
+    return cluster_centers
+
+
+
+
 
 def assign_indexes_to_clusters(elems, centroids):
 
@@ -55,6 +86,8 @@ def in_minimum(prev, curr):
     count+=1
     print count
 
+    if prev is None:
+        return False
 
     return (set([tuple(a) for a in curr]) == set([tuple(a) for a in prev]))
 
@@ -65,10 +98,9 @@ def find_centers(elems, k):
     :param k:
     :return:
     '''
-    prev = random.sample(elems, k)
-    curr = random.sample(elems, k)
-    while np.array_equal(prev, curr):
-        curr = random.sample(elems, k)
+    curr = kpp(elems, k)
+    prev = None
+
     while not in_minimum(prev, curr):
         prev = curr
         clusters = assign_to_clusters(elems, curr)

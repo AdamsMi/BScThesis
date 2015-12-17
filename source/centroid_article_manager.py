@@ -38,7 +38,7 @@ if __name__ == '__main__':
     searchClient = SearchClient()
     dm = DatabaseManager()
     answerDict = {}
-    clus = get_document_clustering(None)
+    clus = get_document_clustering(None, fileName='')
 
     for k, v in clus.items():
         with open(DIR_CLUST_CENTROIDS + str(k)) as input:
