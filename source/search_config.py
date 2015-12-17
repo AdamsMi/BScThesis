@@ -16,6 +16,7 @@ NUMBER_OF_ARTICLES = 1000
 DIR_FILES = '../resources/cleaned_files/'
 DIR_FILES_REUTERS = '/Volumes/normal/cleaned_files/'
 DIR_MATRIX = '../resources/matrix_dump/'
+DIR_INT_MATRIX = '../resources/matrix_for_dirichlet/'
 
 # search engine
 

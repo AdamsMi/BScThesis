@@ -46,6 +46,15 @@ def calculateAndWriteAllMappings():
         with open(DIR_STEMMING_MAP + fileName, 'wb') as out:
             pickle.dump(a, out)
 
+def doesWordAppearInCluster(clustIndexes, core, searchClient):
+    for ind in clustIndexes:
+        title = searchClient.listOfArticles[ind]
+        with open(DIR_STEMMING_MAP + title) as input:
+            currMap = pickle.load(input)
+        if core in currMap.keys():
+            return True
+    return False
+
 def getBestWordsForClusterAndCores(clustIndexes, cores, searchClient, dm):
     ans = {}
     for ind in clustIndexes:
@@ -93,7 +102,7 @@ def getFreqWordsForClustering(clust, dictOfWords, drillDownPath, searchClient, d
             ind = numpy.argmax(clust_centroid)
             for a,b in dictOfWords.items():
                 if b == ind:
-                    if a not in alreadyUsed:
+                    if a not in alreadyUsed and doesWordAppearInCluster(v, a, searchClient):
                         wordsForClust.append(a)
                         break
                     else:
