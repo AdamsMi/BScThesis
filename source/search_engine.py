@@ -209,7 +209,7 @@ class SearchClient(object):
             categoriesClusters = pickle.load(input)
         res = dict()
         for k in categoriesClusters.keys():
-            res[int(k)] = [a[0] for a in categoriesClusters[k]]
+            res[int(k[2:])] = [a[0] for a in categoriesClusters[k]]
 
         return clustering, res, freqWords
 
@@ -270,7 +270,7 @@ class SearchClient(object):
 if __name__ == '__main__':
     dm = DatabaseManager()
     searchClient = SearchClient(dm)
-    clust, labels, words = searchClient.getInitialClustering()
+    #clust, labels, words = searchClient.getInitialClustering()
     #clust, words = searchClient.getClustering([1])
 
     # while (True):

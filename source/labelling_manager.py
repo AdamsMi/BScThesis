@@ -47,15 +47,15 @@ def fasterCorrelations(matrix, indices, vector,  amountOfDocuments):
     return sorted(similarities, key=lambda tup: tup[1], reverse=True)[:3]
 
 
-centroidList = filter(lambda x : '.' not in x , os.listdir(DIR_CENTROIDS2))
+centroidList = filter(lambda x : '.' not in x , os.listdir(DIR_CENTROIDS))
 print centroidList
 
 dictOfResults = defaultdict(list)
 ct = 0
 for ctName in centroidList:
-    with open(DIR_CENTROIDS2+ ctName) as input:
-        curr_centroid = pickle.load(input)
     print ctName
+    with open(DIR_CENTROIDS + ctName, "rb") as input:
+        curr_centroid = pickle.load(input)
     ct+=1
     print len(centroidList) - ct, ' to go'
     a,b = curr_centroid.nonzero()
