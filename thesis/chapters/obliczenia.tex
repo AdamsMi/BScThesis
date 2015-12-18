@@ -1,0 +1,148 @@
+Pierwszym rodzajem wyszukiwania jest realizowanie 
+zapytań w postaci zbioru słów - analogicznie jak w wyszukiwarce google. Użytkownik wprowadza więc pewne frazy, które jego 
+zdaniem dobrze opisywać będą interesujące go artykuły
+ a rolą aplikacji jest te artykuły odnaleźć.
+Poniższy rozdział opisuje kolejne wykonane kroki (także zanim użytkownik dane zapytanie wprowadza) które wykonane zostały by aplikacja mogła na zapytania odpowiadać.
+
+\section{Preprocessing}
+Preprocessing to wszelkie czynności wykonane w celu ekstrakcji jak największej ilości informacji z posiadanych danych, które nie zależą od wykonanych przez użytkownika czynności (z tego też powodu można je wykonać zawczasu - potrzebne są tylko te dane w których posiadaniu już jesteśmy)
+
+\subsection{Czyszczenie artykułów}
+By w sposób wygodny i wydajny pracować z artykułami, niezbędne jest wypracowanie dla nich spójnego i efektywnego sposobu reprezentacji, który równocześnie zachowywałby jak największą dawkę wyekstrahowanych informacji. W celu dobrej ekstrakcji informacji posiadane artykuły są najpierw "czyszczone" - usuwana jest z nich jak największa ilość szumu, czyli zbędnie przechowywane informacje.
+Operacja ta dokonana jest w nastepujących krokach:
+
+\begin{description}
+  \item[Stop words removal] \hfill \\
+ Pierwszym krokiem w procesie czyszczenia artykułów jest usunięcie z niego wszystkich słów klasyfikowanych jako tzw. stop words. Są to słowa takie jak spójniki czy inne słowa które same w sobie nie przenoszą konkretnego znaczenia i z punktu widzenia reprezentacji strukturalnej artykułów nie niosą żadnej wartości. Usunięcie ich powoduje zatem zagęszczenie słów przenoszących informacje w ramach danego artykułu.
+ 
+  \item[Stemming] \hfill \\
+Jest to proces sprowadzania słowa do jego rdzenia. Operacja ta powoduje, że spokrewnione wyrazy będące różnymi częściami mowy zostają skrócone do jednakowego słowa, dzięki czemu artykuły je zawierające przenoszą teraz taką samą treść i łatwiej będzie odnaleźć pomiędzy nimi semantycze powiązanie.
+\end{description}
+\begin{center}
+ \smartdiagram[bubble diagram]{
+ stem, 
+ stems, 
+ stemming, 
+ stemmed, 
+ stemmer
+ }
+ 
+ Rys. 1 - Przykładowe wyniki algorytmu stemmingu. Różne słowa o tym samym rdzeniu sprowadzane są do jednakowego wyrazu.
+\end{center}
+
+\section{Reprezentacja strukturalna}
+Po dokonaniu czyszczenia plików posiadamy artykuły w postaci maksymalnie skróconych słów przenoszących interesujące nasz znaczenie. Możliwe jest zatem przystąpienie do tworzenia ich reprezentacji innych niż plik zawierający kolejne wyrazy.
+\subsection{Bag of words}
+Reprezentacją na której będziemy w znacznej części polegać jest reprezentacja bag-of-words czyli wektor cech. Każdy artykuł jest w niej opisany wektorem o długości równej mocy zbioru wszystkich słów występujących w posiadanym korpusie artykułów. Słowa w tym zbiorze zostają ponumerowane i następnie dla każdego artykułu jest tworzony na tej podstawie odpowiedni wektor. Będąc początkowo wektorem zerowym, zostaje on wypełniony poprzez dodawanie wartości jednostkowej na odpowiednim miejscu dla każdego występującego w danym artykule słowa. Po obliczeniu takiego wektora dla każdego posiadanego artykułu, zostają one ułożone obok siebie i uformowana zostaje macierz bag-of-words która następnie zostaje zapisana.
+
+Zaczynamy więc od obliczenia zbioru wystkich słów występujących w artykułach.
+Przyjmijmy zatem oznaczenie:
+\begin{center}
+$A$ - zbiór wszystkich słów z posiadanych artykułów
+\end{center}
+
+Zadajemy następnie odwzorowanie bijektywne:
+\begin{center}
+$f:A->X$, gdzie $X = \{ x: x \in \mathbb{N}_{+} \land x \leq \#A \} $
+\end{center}
+Odwzorowanie to więc indeksuje słowa kolejnymi liczbami naturalnymi.\\ 
+Na jego podstawie można skonstruować wektor cech dla kolejnych artykułów. Dla każdego z nich wystarczy rozpatrzeć każde znajdujące się w nim słowo $s$ i dodać $1$ do początkowo zerowego wektora na pozycji $f(s)$.
+
+Wartości elementów utworzonej macierzy M skonstruowanej przez ułożenie wektorów cech przetwarzanych artykułów jako kolumny wynoszą więc:
+\begin{center}
+$A_{ij}$ = ilość wystąpień słowa $f^{-1}(i)$ w artykule numer j.
+\end{center}
+\subsection{Modyfikacje wartości macierzy bag-of-words}
+Proste wyznaczanie wektorów cech posiada pewne isotne wady. Ponieważ ta reprezentacja ma w przyszłości służyć do porównywania artykułów pomiędzy sobą, nadreprezentacja słów często występujących w języku angielskim może zaburzać wyniki, ponieważ wszystkie wyrazy są traktowane jednakowo. Należy także zwrócić uwagę na większe wartości elementów wektorów cech dla dłuższych artykułów, gdyż mają po prostu więcej słów. Te potencjalne problemy zostały zaadresowane na opisane poniżej sposoby.
+
+\begin{description}
+  \item[Inverse document frequency] \hfill \\
+Dla danego korpusu artykułów, co jest szczególnie widoczne przy ich konkretnej tematyce - u nas to tematyka finansowa - pewne słowa nie będą właściwie niosły żadnej informacji. Przykładowo rozważając artykuły o tematyce motoryzacyjnej, łatwo jest wyobrazić sobie, że słowo "auto" będzie występować w prawie każdym tekście. Dla naszego zbioru takim wyrazem może być "money". Zastosowana więc została technika osłabienia wpływu często występujących słów na obliczane podobieństwo pomiędzy artykułami, a także pomiędzy zapytaniem użytkownika a artykułami.
+
+Dla każdego wyrazu wystepującego w naszym zbiorze artykułów obliczona zostaje wartość wyrażenia
+
+\begin{center}
+$idf_w = log\frac{N}{df_w}$, gdzie\\
+\end{center}
+$df_w$ - ilość dokumentów spośród przetwarzanego zbioru które posiadają wyraz $w$\\
+$N$ - Ilość wszystkich przetwarzanych dokumentów 
+
+Następnie wiersze macierzy odpowiadające ilości wystąpień danego słowa w kolejnych artykułach zostają przez wyliczoną dla niego wartość idf. Czynność ta wykonana zostaje dla każdego słowa. Tym sposobem waga słów wystepujących rzadko zostaje zwiększona, a tych bardziej powszechnych zmniejszona.
+
+  \item[Normalizacja] \hfill \\
+Warto zwrócić uwagę, że stosując reprezentację bag-of-words, artykuły dłuższe będą posiadały statystycznie więcej niezerowych elementów, a wartości dla słów będą większe (gdyż słowo częściej będzie występować tu wielokrotnie). Spowodować to może zaburzenie wyników podczas obliczania podobieństw pomiędzy różnymi artykułami. Dlatego też kolejne wiersze, czyli wartości dla kolejnych słów dla rozważanych artykułów zostają zostają przemnożone przez wartość
+$$\frac{1}{\sqrt{\sum\limits_{i=1}^{n} A_{is}}}$$
+
+gdzie:\\
+n - ilość słów\\
+A - macierz bag-of-words\\
+s - indeks rozważanego słowa\\
+ 
+\end{description}
+\section{Dekompozycja SVD oraz low-rank approximation}
+Dekompozycja SVD (ang. Singular Value Decomposition), to pewien rozkład macierzy na iloczyn trzech specyficznych macierzy. Korzystamy z faktu, że każdą macierz rzeczywistą A można przedstawić w postaci rozkładu SVD:
+
+$$A=U\Sigma V ^T$$
+gdzie
+\begin{itemize}
+\item U i V, macierze ortonormalne
+\item $\Sigma$ -  macierz diagonalna (przekątniowa), taka że 
+\item $\Sigma=diag(\sigma_i)$, gdzie $\sigma_i$ - nieujemne wartości osobliwe macierzy $A$, uporządkowane nierosnąco. 
+\end{itemize}
+
+Zostanie teraz przedstawiony problem przybliżenia macierzy.\\
+Dla zadanej macierzy $C$ o wymiarach $M \times N$ i liczby naturalnej $k$, chcemy znaleźć macierz $C_k$ o wymiarach $M \times N$ rzędu co najwyżej $k$ taką, by zminimalizować normę Frobeniusa macierzy $X = C - C_k$, zdefiniowaną jako
+$$\Vert x \Vert _{F} =\sqrt{ \sum \limits _{i=1}^{M} \sum \limits _{j=1}^{N} x^{2}_{ij}} $$
+
+Dekompozycja SVD może zostać użyta do rozwiązania tego problemu. Po obliczeniu rozkładu SVD dla macierzy C, uzyskujemy macierz $\Sigma _k$ z macierzy $\Sigma$ zastąpując w niej $r-k$ najmniejszych wartości własnych na diagonali $\Sigma$ zerami (r - rząd macierzy C). Rząd macierzy uzyskanej w ten sposób wynosi co najwyżej $k$. Wynika to z faktu, że macierz $\Sigma _k$ ma co najwyżej $k$ niezerowych wartości.
+Twierdzenie Eckarta–Younga–Mirsky'ego mówi, że macierz ta jest macierzą rzędu k najmniejszym możliwym błędem Foreniusa. Intuicyjnie można to wytłumaczyć faktem, że te najmniejsze wartości własne ułożone na diagonali macierzy $\Sigma _k$ po wymnożeniu macierzy uzyskanych podczas dekompozycji SVD mają najmniejszy wpływ na macierz (kierunki przez nie wyznaczone niosą informację o najmniejszej wariancji).
+
+Nawet dla zbiorów o niewielkim rozmiarze macierz bag-of-words posiadać będzie dziesiątki tysięcy kolumn i wierszy i będzie także rzędu kilku tysięcy. Wyznaczając więc powyżej opisaną macierz następuje znaczna redukcja wymiaru oraz wyeliminowanie szumu. Wektory cech zostają mapowane do przestrzeni k-wymiarowej. Przestrzeń ta jest opisana przez k wektorów własnych odpowiadających wartościom własnym które nie zostały zastąpione zerami. Te wektory własne przenosząc informację o kierunkach w których niesione jest dużo wariancji mogą pomóc znaleźć synonimy oraz słowa zbliżone tematycznie, tym samym zwiększając prawdopodobieństwo dobrego wyboru artykułów dla zadanego zapytania.
+
+
+\section{Latent Dirichlet Allocation}
+LDA to model który stara się opisać zbiór obserwacji za pomocą tzw. ukrytych grup (czyli takich które muszą zostać wywnioskowane z danych), dzięki czemu próbuje odpowiedzieć na pytanie dlaczego pewne elementy danych są podobne. Dla dokumentów zawierających słowa, model ten reprezentuje je [dokumenty] jako miks niewielkiej liczby tematów. Każdy z tematów z kolei zostaje zamodelowany jako pewna dystrybucja (miks) słów wchodzących w jego skład. Sam algorytm, działając określoną liczbę iteracji stopniowo poprawia jakość przypisania słów do tematów przeliczając ich dystrybucję na nowo. Problemem jest wartość $k$, czyli ustalona ilość tematów, z których dokumenty się mają składać. Dobry wybór wartości tego argumentu jest kluczowy dla dobrego działania artykułu.
+
+LDA jest traktowane w naszej aplikacji jako alternatywne podejście wobec SVD. Użytkownik ma możliwość w ustawieniach aplikacji wybrać jakiego rodzaju wyszukiwanie preferuje (Szczegóły wyszukiwania opisane zostały poniżej). W trakcie eksperymentów zauważyliśmy znacznie lepsze wyniki stosując wyszukiwanie używając macierzy powstałej przez dekompozycę SVD i low-rank-approximation.
+
+\section{Wyszukiwanie}
+Podczas wyszukiwania zapytanie jest traktowane jako artykuł. Zapytanie jest więc czyszczone, następuje stemming oraz stop words removal. Skonstruowany zostaje wektor bag-of-words. 
+
+\subsection{Wyszukiwanie stosując SVD}
+Obliczając podobieństwo pomiędzy wektorem reprezentującym zapytanie a kolumnami macierzy będącymi wektorami cech artykułów, znajdowane są te z nich dla których miara podobieństwa jest największa i to one stanowią zawartość wyniku dla użytkownika.
+Miarą podobieństwa pomiędzy dokumentami d1 oraz d2 jest ich podobieństwo wg miary cosinusowej:
+
+$$sim(d_1, d_2) = \frac{\vec{V} (d_1) \cdot \vec{V} (d_2)}{| \vec{V} (d_1) | | \vec{V} (d_2) | }$$
+
+gdzie $\vec{V} (d)$ oznacza reprezentację wektorową artykułu d.\\
+
+Ponieważ na etapie konstrukcji macierzy dokonano jednak normalizacji i każdy artykuł z którego konstruowana była macierz bag-of-words miał długość jednostkową, mianownik jest iloczynem dwóch wartości jednostkowych i nie musi być kalkulowany. Normalizacja nabiera zatem jescze większego sensu - by policzyć podobieństwo pomiędzy artykułami wystarczy obliczyć wartość iloczynu skalarnego odpowiednich wektorów.
+
+\subsection{Wyszukiwanie stosując LDA}
+
+W momencie skończenia działania algorytmu LDA dla zadanej macierzy bag-of-words oraz podanej liczby tematów $k$, otrzymujemy dwa istotne obiekty
+\begin{description}
+\item[Macierz tematy-słowa]
+Macierz ta dla każdego z k tematów opisuje dystrybucję słów w danym temacie. Jest więc wymiarów $k \times S$, gdzie $S$ to liczba słów w rozważanym zbiorze artykułów.
+\item[Macierz artykuły-tematy]
+Macierz ta opisuje dystrybucję k tematów w każdym z rozważanych artykułów. Jej wymiary to $ N \times k$, gdzie $N$ to liczba dokumentów z przetwarzanym zbiorze. 
+\end{description}
+
+W celu wyszukania najbardziej zbliżonych artykułow dla danego zapytania musimy uzyskać dystrybucję tematów w wektorze zapytania, a nastepnie porównać go z innymi artykułami, by tym sposobem znaleźć te najbardziej podobne. By znaleźć w jednym kroku podobieństwo z każdym z artykułów wykonywane jest mnożenie
+
+$$\vec{V}(q) M_{ts} ^T M_{at} ^T$$
+
+gdzie:
+
+\begin{itemize}
+\item $\vec{V}(q)$ - wektor cech stworzony dla zapytania (ang. query). Jest to więc macierz wymiarów $1 \times S$, $S$ - ilość słów w zbiorze artykułów.
+\item $M_{ts}$ - Macierz tematy-słowa, opisana powyżej
+\item $M_{at}$ - Macierz artykuły-tematy, opisana powyżej
+\end{itemize}
+
+Następnie wystarczy wybrać wymaganą ilość najbardziej podobnych artykułów znajdując je po indeksach maksymalnych wartości w wynikowym wektorze.
+
+
+
+
+

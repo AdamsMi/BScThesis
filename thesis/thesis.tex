@@ -1,0 +1,53 @@
+\documentclass[12pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage[T1]{fontenc}
+\usepackage[polish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{amsfonts}
+\usepackage{smartdiagram}
+\usepackage{metalogo}
+\selectlanguage{polish}
+\graphicspath{ {images/} }
+\title{
+	{Rozproszony system eksploracji korpusów tekstu działający w oparciu o ich strukturalną reprezentację}\\
+	{\large Akademia Górniczo-Hutnicza}\\
+	\vspace{1.5cm}
+	{\includegraphics{agh.jpg}}
+}
+\author{Michał Adamczyk, Dominik Majda}
+\date{26.11.2015r.}
+\begin{document}
+
+\input{titlepage}
+
+\tableofcontents
+
+\chapter{Cel prac i wizja projektu}
+\input{chapters/chapter1}
+
+\chapter{Zrealizowane funkcjonalności}
+\input{chapters/zrealizowane_f}
+
+\chapter{Wybrane aspekty realizacji}
+\input{chapters/aspekty}
+
+
+\chapter{Komponenty systemu}
+\input{chapters/komponenty}
+
+\chapter{Zbiory artykułów}
+\input{chapters/zbiory}
+
+\chapter{Wyszukiwanie za pomocą łańcucha słów}
+\input{chapters/obliczenia}
+
+\chapter{Wyszukiwanie drill-down}
+\input{chapters/obliczenia2}
+
+\chapter{Organizacja pracy}
+\input{chapters/organizacja_pracy}
+
+
+\end{document}
