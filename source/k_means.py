@@ -140,5 +140,3 @@ def get_document_clustering(docs, fileName = '', nrOfClusters=12, actualIndexes 
             pickle.dump(a, handle)
 
     return a
-
-

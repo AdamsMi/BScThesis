@@ -9,15 +9,14 @@ PORT = 9458
 HOST = "0.0.0.0"
 
 app = Flask(__name__)
-dm = DatabaseManager()
-searchClient = SearchClient(dm)
 
 
 @app.route('/search')
 def search():
     query = request.args.get('query')
-    result, queryTime = searchClient.search(query)
+    svd = request.args.get("svd")
 
+    result, queryTime = searchClient.search(query, isSvd = (svd == "1"))
 
     return jsonify({
         "status": "OK",
@@ -71,4 +70,6 @@ def articles():
 
 
 if __name__ == '__main__':
+    dm = DatabaseManager()
+    searchClient = SearchClient(dm)
     app.run(debug=True, host=HOST, port=PORT)
