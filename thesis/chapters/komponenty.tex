@@ -1,0 +1,24 @@
+\section{Aplikacja mobilna}
+Aplikacja mobilna pełni rolę widoku, to znaczy sama nie wykonuje obliczeń ani nie ma dostępu do bazy danych. Komunikuje się ze stroną serwerową za pomocą zapytań, i prezentuje użytkownikowi ich rezultaty. Dostarcza ona użytkownikowi dwa sposoby na wyszukiwanie interesujących go artykułów z posiadanego ich zbioru.
+
+\begin{description}
+  \item[Wyszukiwanie dla danego zapytania] \hfill \\
+  Wyszukiwanie pośród potencjalnych artykułów odbywa się na podstawie podanego przez użytkownika zbioru słów. Aktywność w aplikacji ogranicza się więc do wpisania tekstu, dla którego użytkownik dostać chce artykuły z tekstem tym związane tematycznie.
+  \item[Wyszukiwanie poprzez zawężanie kategorii] \hfill \\
+  Użytkownik poszukując interesujących artykułów zamiast próbować je znaleźć poprzez podawanie charakterystycznych słów skupia się na generalnych kategoriach do których artykuły te mogą należeć. Aplikacja prezentuje kilkanaście grup (tzw. klastrów), każdą z nich opisując trzema kategoriami które odzwierciedlają tematykę artykułów do kolejnych zbiorów należących. Po wybraniu jednego z klastrów aplikacja prezentuje analogiczny podział o jeden stopień głębiej, biorąc pod uwagę jedynie artykuły z danej grupy. W przeciwieństwie do pierwszego wyboru, grupy od tej pory opisywane będą najczęściej występującymi w artykułach słowami. To schodzenie na coraz głębszy poziom trwa tak długo jak użytkownik zdecyduje, że chce zobaczyć wszystkie artykuły dla danej grupy, lub aż dany klaster będzie na tyle mały, że jego dalszy podział nie ma sensu.
+
+\end{description}
+
+\section{Strona serwerowa}
+Strona serwerowa działa w sposób niewidoczny dla użytkownika. Wykonuje wszystkie niezbędne operacje i obliczenia, a aplikacji wysyła jedynie gotowe odpowiedzi na zadane zapytania. Wystawione przez stronę serwerową API służy do obsługiwania nadchodzących od aplikacji klienckich zapytań. W założeniu strona serwerowa ma działać nieustannie. Spora część obliczeń musi zostać wykonana od nowa w momencie dodawania nowych artykułów do obsługiwanego korpusu, dlatego aktualizacje strony serwerowej planowo odbywać powinny się w nocy.
+
+Czynności wykonywane przez stronę serwerową są dwojakiego rodzaju:
+
+\begin{description}
+  \item[Preprocessing] \hfill \\
+	Czynności tego typu mogą zostać wykonane jednokrotnie i nie wymagane jest w tym celu posiadanie żadnego rodzaju informacji od użytkownika. Z tego powodu obliczenia te mogą zostać wykonane zawczasu, co powoduje przyspieszenie pracy serwera.
+  \item[Obliczenia wykonywane podczas wyszukiwania] \hfill \\
+  Drugim rodzajem czynności jest wykonywanie obliczeń w odpowiedzi na zapytanie użytkownika. Ponieważ w celu ich wykonania konieczna jest znajomość kontekstu, by można było do nich przystąpić niezbędna jest interakcja ze strony użytkownika. Są one więc wykonywane niejako na żądanie. Czas ich wykonania stanowi większość okresu pomiędzy wprowadzeniem do aplikacji klienckiej zapytania a otrzymaniem wyników. 
+
+\end{description}
+

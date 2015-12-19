@@ -1,0 +1,23 @@
+Alternatywnym sposobem wyszukiwania dostarczanym
+ przez aplikację klientowi jest wyszukiwanie tzw. drill-down. 
+ Polega ona na ciągłym zawężaniu tematyki interesującej
+ użytkownika aż do znalezienia tej interesującej go.
+Użytkownikowi zaprezentowane zostają klastry, w odpowiedni sposób etykietowane, dzięki czemu może on zorientować się który z nich wydaje się być najbardziej zbliżony do tematyki jego zainteresowań. Po wybraniu tegoż, zostaje mu zaprezentowana kolejna klasteryzacja, tym razem jedynie wewnątrz wybranego fragmentu. Tym sposobem użytkownik w pewnym momencie wybierze grupę tematyczną na tyle małą, że dalszy podział nie będzie miał sensu i zostaną mu przedstawione wybrane artykuły.
+
+\section{Preprocessing}
+Analogicznie jak w przypadku przygotowań do zapytań w postaci podania słów, ogromna część obliczeń wykonana zostać może zawczasu. Zanim użytkownik wybierze klastry, zostają one zawczasu odpowiednio policzone oraz wybrane zostają ich etykiety. Jest to możliwe ponieważ dla danego zbioru artykułów klasteryzacja nie zależy od kontekstu.
+
+\subsection{Bag of words}
+Analogicznie jak w pierwszym rodzaju wyszukiwania, zostaje zbudowana macierz złożona z wektorów cech artykułów, która następnie zostaje zredukowana w sensie ilości wymiarów za pomocą SVD.
+
+\subsection{Klasteryzacja}
+Posiadane artykuły zostają klasteryzowane za pomocą algorytmu k-means. Zostają one za jego pomocą podzielone na 12 odrębnych grup na podstawie odległości pomiędzy sobą. Wyliczone zostają też centroidy (średni reprezentanci) dla grup z pierwszej klasteryzacji. Następnie obliczone i zapisane zostają kolejne klasteryzacje wgłąb każdego z obliczonych klastrów. Te zstępujące rekurencyjne obliczenia kontynuowane są tak długo, jak ilość artykułów należących do danego klastra jest odpowiednio duża.  
+
+\subsection{Użycie wiedzy zewnętrznej}
+Ponieważ dysponowaliśmy wiedzą zewnętrzną w postaci kilkuset tysięcy artykułów serwisu reuters o tematyce finansowo-ekonomicznej, z których każdy był etykietowany kilkoma kategoriami do których należy, postanowiliśmy jej użyć. Dla każdej kategorii został policzony jej średni reprezentant, przy użyciu tych samych reprezentacji strukturalnych jak dla naszych artykułów, tj. wektor cech oraz niezmienniki grafowe.
+
+Posiadając obliczonych średnich reprezentantów dla naszych klastrów oraz poszczególnych kategorii z bazy artykułów reuters, dla każdej z centroid klastrów naszych artykułów obliczone zostały podobieństwa z każdą z centroid kategorii reuters. Następnie wybrane i zapisane zostały trzy najlepsze dla każdej z naszych grup. 
+
+\subsection{Etykietowanie klastrów}
+By użytkownik mógł sprawnie wybierać interesujące go klastry i tym samym zawężać przeszukiwane grupy artykułów, grupy te powinny być jak najdokładniej opisane. Służyć temu ma operacja etykietowania. Pierwszą czynnością jest opisanie klastrów najwyższego poziomu (najbardziej ogólnych, pochodzących z pierwszej klasteryzacji) za pomocą nazw przypisanych im kategorii z zewnętrznej bazy artykułów (proces dopasowania opisany został powyżej).
+Następnie klastry każdego poziomu opisane zostają słowami które przenoszą największą w tym klastrze ilość informacji (przypisana im wartość w macierzy po obliczeniu SVD dla danego artykułu jest największa). Przyjęta zostaje zasada, że etykiety użyte w pewnym klastrze, nie zostaną ponownie użyte do opisania jego klastrów potomnych, by etykiety różnych klastrów jak najbardziej różniły się między sobą.
