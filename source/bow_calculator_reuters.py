@@ -1,5 +1,7 @@
 """
-Module calculating bow for reuters files and dumping them as csr_matrix.
+Module calculating bow for reuters files and dumping them as csr_matrixes.
+For each file from the reuters db bag-of-words is calculated so as to speed up
+computation of categories' centroids.
 """
 
 

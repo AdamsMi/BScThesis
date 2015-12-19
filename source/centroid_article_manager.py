@@ -12,17 +12,6 @@ from search_engine import SearchClient
 from source.database_manager import DatabaseManager
 
 
-#def calcCentroid(matrix, indices):
-#    startingPoint = matrix[:, indices[0]]
-#    print startingPoint
-#    for ind in indices[1:]:
-#        startingPoint += matrix[:, ind]
-#        print matrix[:, ind]
-#    return startingPoint / float(len(indices))
-
-
-
-
 
 def findArticleClosestToCentroid(listOfDocNumbers, centroid, mtx):
     a = []

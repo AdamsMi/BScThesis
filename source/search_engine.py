@@ -1,3 +1,7 @@
+'''
+Module responsible for handling a user's query.
+'''
+
 import time
 import pickle
 import numpy as np

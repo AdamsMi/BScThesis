@@ -1,3 +1,8 @@
+'''
+This module calculates all the mappings core -> word for each of the articles.
+Moreover, it is responsible for finding the best label-words for a given cluster.
+'''
+
 import os
 import re
 import pickle

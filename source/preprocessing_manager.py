@@ -1,5 +1,6 @@
-__author__ = 'Michal'
-
+'''
+This module computes bow matrix for a given set of articles.
+'''
 import os
 import numpy
 import sys
@@ -12,7 +13,7 @@ import networkx as nx
 
 from file_cleaner import cleaningOfWord
 from scipy.stats import skew, kurtosis
-from search_config import  DIR_MATRIX, NUMBER_OF_ARTICLES, DIR_FILES, NGRAM_SIZE
+from search_config import  DIR_MATRIX, DIR_FILES, NGRAM_SIZE, DIR_INT_MATRIX
 from efficiencydefs import globalefficiency
 from collections import defaultdict
 
@@ -232,7 +233,8 @@ def gatherAllWordsFromArticles(listOfArticles, pathToArticles):
 
     return words, dictOfWords, matrix, dictOfTermOccurrences, mapOfWords
 
-def writeDataToFile(matrix, dictOfThingsToDump):
+
+def writeDataToFile(matrix, dictOfThingsToDump, path):
     """
 
     :param matrix: the main matrix
@@ -241,17 +243,17 @@ def writeDataToFile(matrix, dictOfThingsToDump):
 
     mat = scipy.sparse.csc_matrix(matrix)
 
-    with open(DIR_MATRIX + 'data.pkl', 'wb') as output:
+    with open(path + 'data.pkl', 'wb') as output:
         pickle.dump(mat.data, output)
 
-    with open(DIR_MATRIX + 'indices.pkl', 'wb') as output:
+    with open(path + 'indices.pkl', 'wb') as output:
         pickle.dump(mat.indices, output)
 
-    with open(DIR_MATRIX + 'indptr.pkl', 'wb') as output:
+    with open(path + 'indptr.pkl', 'wb') as output:
         pickle.dump(mat.indptr, output)
 
     for x in dictOfThingsToDump.keys():
-        with open(DIR_MATRIX + x + '.pkl', 'wb') as output:
+        with open(path + x + '.pkl', 'wb') as output:
             pickle.dump(dictOfThingsToDump[x], output)
 
 
@@ -292,6 +294,13 @@ if __name__ == '__main__':
     print "Gathering words done, took: ", stop-start, " seconds"
     print "Amount of words: ", len(setOfWords), "\n"
 
+
+    print "Saving bow matrix for LDA"
+    start = time.time()
+    writeDataToFile(matrix, {}, path=DIR_INT_MATRIX)
+    print "Saved, took", time.time() - start
+
+
     start = time.time()
     matrix, idfs = idf(matrix, amountOfFiles,dictOfTermOccurrences, listOfWords)
     stop = time.time()
@@ -313,7 +322,8 @@ if __name__ == '__main__':
 
                               "idfs" : idfs,
                               "articleInvariants": articleInvarints
-                            })
+                            },
+                    path = DIR_MATRIX)
     stop = time.time()
 
     print "Writing to file done, took: ", stop - start, " seconds\n"

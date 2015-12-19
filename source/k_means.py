@@ -1,3 +1,7 @@
+'''
+Lloyd's k-means algorithm with a special points' initialization (so-called k-means++)
+'''
+
 from copy import copy
 import random
 import numpy as np

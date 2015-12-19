@@ -1,4 +1,6 @@
-__author__ = 'Dominik'
+'''
+The module responsible for handling databases from both articles sets.
+'''
 
 import sqlite3
 

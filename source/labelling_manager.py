@@ -1,12 +1,15 @@
+
+'''
+This module calculates similarity between a cluster's centroid and category's centroid
+ for every k-means cluster and every reuters' category.
+'''
+
 import os
 import pickle
-import numpy as np
 
-from database_manager   import DatabaseManager
 from search_config      import DIR_CENTROIDS
 from scipy.sparse       import csc_matrix
-from search_config      import DIR_MATRIX, DIR_CLUST_CENTROIDS
-from search_engine      import sparseLowRankAppr
+from search_config      import DIR_CLUST_CENTROIDS
 from collections import defaultdict
 
 def loadMatrix(directory):

@@ -1,9 +1,10 @@
 """
-Wybieranie top 3 kategorii dla kazdego z klastrow
+Module selecting top 3 categories for each cluster from k-means clustering.
 """
 import pickle
 from search_config import DIR_CLUST_CENTROIDS, DIR_TOPIC_CODES
 from reuters_centroid_creator import readCategoriesFromFile
+
 def select3BestCategoriesPerCluster(simils):
     dictsToTuples = [[a.keys()[0], a.values()[0]] for a in simils]
     return sorted(dictsToTuples, key= lambda x : x[1], reverse=True)[:3]

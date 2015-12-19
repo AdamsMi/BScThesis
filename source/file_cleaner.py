@@ -1,3 +1,6 @@
+'''
+This module goes through all the articles in a given set and cleans them.
+'''
 import re
 import os
 import multiprocessing
