@@ -2,7 +2,7 @@ Alternatywnym sposobem wyszukiwania dostarczanym
  przez aplikację klientowi jest wyszukiwanie tzw. drill-down. 
  Polega ona na ciągłym zawężaniu tematyki interesującej
  użytkownika aż do znalezienia tej interesującej go.
-Użytkownikowi zaprezentowane zostają klastry, w odpowiedni sposób etykietowane, dzięki czemu może on zorientować się który z nich wydaje się być najbardziej zbliżony do tematyki jego zainteresowań. Po wybraniu tegoż, zostaje mu zaprezentowana kolejna klasteryzacja, tym razem jedynie wewnątrz wybranego fragmentu. Tym sposobem użytkownik w pewnym momencie wybierze grupę tematyczną na tyle małą, że dalszy podział nie będzie miał sensu i zostaną mu przedstawione wybrane artykuły.
+Użytkownikowi zaprezentowane zostają klastry, w odpowiedni sposób etykietowane, dzięki czemu może on zorientować się który z nich wydaje się być najbardziej zbliżony do tematyki jego zainteresowań. Po wybraniu go, zostaje mu zaprezentowana kolejna klasteryzacja, tym razem jedynie wewnątrz wybranego fragmentu. Tym sposobem użytkownik w pewnym momencie wybierze grupę tematyczną na tyle małą, że dalszy podział nie będzie miał sensu i zostaną mu przedstawione wybrane artykuły.
 
 \section{Preprocessing}
 Analogicznie jak w przypadku przygotowań do zapytań w postaci podania słów, ogromna część obliczeń wykonana zostać może zawczasu. Zanim użytkownik wybierze klastry, zostają one zawczasu odpowiednio policzone oraz wybrane zostają ich etykiety. Jest to możliwe ponieważ dla danego zbioru artykułów klasteryzacja nie zależy od kontekstu.
@@ -10,11 +10,69 @@ Analogicznie jak w przypadku przygotowań do zapytań w postaci podania słów, 
 \subsection{Bag of words}
 Analogicznie jak w pierwszym rodzaju wyszukiwania, zostaje zbudowana macierz złożona z wektorów cech artykułów, która następnie zostaje zredukowana w sensie ilości wymiarów za pomocą SVD.
 
+\subsection{Niezmienniki grafowe}
+Reprezentacja bag-of-words ma istotną wadę: nie uwzględnia ona kolejności wystepowania słów w przetwarzanych tekstach. Ten sam artykuł ze słowami pozamienianymi miejscami będzie miał identyczną reprezentację w postaci wektora cech. Próbą zaadresowania tego problemu jest rozszerzenie reprezentacji bag-of-words o obliczone tzw. niezmienniki grafowe. 
+
+Do obliczenia niezmienników grafowych niezbędne jest najpierw skontruowanie grafu. Konstrukcja ta zostaje wykonana dla każdego artykułu z obu zbiorów danych. Zastosowany zostaje model n-gramów. Jest to model językowy stosowany głównie do słów, za którego pomocą można opisać strukturę. Kolejne wystepujące po sobie słowa w zadanej ilości są traktowane jako występujące kolejno n-gramy. N-gramy dla n=2 są nazywane bigramami a dla n=3, trigramami.\\
+Przykład: Dla zdania ,,Stoi na stacji lokomotywa'' wyróżnić można następujące bigramy: stoi na, na stacji, stacji lokomotywa. Dla każdego z tekstów został skonstruowany graf który bigramy traktował jako wierzchołki a krawędzie oznaczały wystepowanie po sobie połączonych bigramów. Dodatkową potrzebną w późniejszym etapie strukturą danych, także obliczaną dla każdego artykułu, jest wektor następujących po sobie bigramów.
+
+Po konstrukcji niezbędnych struktur przystąpiono do obliczenia niezmienników grafowych.
+
+\begin{description}
+\item [Ilość wierzchołków grafu]
+Obliczone zostało jak wiele różnych bigramów znajduje się w danym artykule.
+\item [Ilość krawędzi grafu]
+Wartość tego niezmiennika to ilość kolejno następujących bigramów.
+\item[Average clustering coeffictient]
+Niezmiennik ten jest średnią arytmetyczną wartości $local clustering coefficient$ obliczanej dla każdego wierzchołka według wzoru:
+
+$$C_i = \frac{2\#\{ e_{ij} : v_j, v_k \in N_i \land  e_{jk} \in E\}}{k_i(k_i - 1)}$$
+gdzie\\
+$E$ - zbiór wszystkich krawędzi grafu danego artykułu\\
+$e_{ij}$ - krawędź pomiędzy wierzchołkami $i$ oraz $j$\\
+$N_i$ - zbiór wszystkich sąsiadów wierzchołka $i$\\
+$k_i$ - ilość sąsiadów wierzchołka $i$\\
+
+ \item [Ilość silnie spójnych składowych]
+ Silnie spójna składowa grafu skierowanego to taki maksymalny jego podgraf w którym pomiędzy każdymi dwoma jego wierzchołkami istnieje ścieżka. Mówiąc prościej w silnie spójnie składowej możliwe jest dojście z każdego wierzchołka do każdego innego.
+ 
+ \item [Skośność]
+ Podczas obliczania tego niezmiennika użyte zostaną wektory kolejno wystepujących wierzchołków skonstruowane podczas konstrukcji grafu dla danego artykułu. Zbiorem dla którego będą obliczane wartości z wzoru na skośność są indeksy wierzchołków występujących w wektorze dla danego artykułu.
+ Skośność obliczana jest według wzoru:
+$$A = \frac{\mu - d}{s}$$
+gdzie\\
+$\mu$ - średnia arytmetyczna\\
+$s$ - odchylenie standardowe\\
+$d$ - dominanta\\
+
+\item[Kurtoza]
+Kurtoza jest miarą spłaszczenia rozkładu wartości cechy. Obliczana jest na takim samym zbiorze jak skośność - na indeksach kolejno wystepujących bigramów w danym tekście. Obliczana jest według wzoru:
+$$Kurt = \frac{\mu_4}{\sigma^4} - 3$$
+gdzie\\
+$\mu_4$ - czwarty moment centralny\\
+$\sigma$ - odchylenie standardowe\\
+
+Odjęcie od wyniku 3 daje nam 0 dla rozkładu normalnego.
+
+\end{description}
+
+Po obliczeniu niezmienniki grafowe zostają przeskalowane na wartości w przedziale $[0,1]$ poprzez obliczenie wartości:
+
+$Normalized(e) = \frac{e - E_{min}}{E_{max} - E_{min}}$
+gdzie\\
+$E_{min}$ - minimalna wartość niezmiennika E\\
+$E_{max}$ - maksymalna wartość niezmiennika E\\
+$e$ - wartość niezmiennika $E$ będąca skalowana\\
+
+Następnie podczas wykonywania niektórych obliczeń wartości niezmienników dla artykułów będą doklejane na końcu ich wektora cech.
+ 
 \subsection{Klasteryzacja}
-Posiadane artykuły zostają klasteryzowane za pomocą algorytmu k-means. Zostają one za jego pomocą podzielone na 12 odrębnych grup na podstawie odległości pomiędzy sobą. Wyliczone zostają też centroidy (średni reprezentanci) dla grup z pierwszej klasteryzacji. Następnie obliczone i zapisane zostają kolejne klasteryzacje wgłąb każdego z obliczonych klastrów. Te zstępujące rekurencyjne obliczenia kontynuowane są tak długo, jak ilość artykułów należących do danego klastra jest odpowiednio duża.  
+Posiadane artykuły zostają klasteryzowane za pomocą algorytmu k-means. Zostają one za jego pomocą podzielone na 12 odrębnych grup na podstawie odległości pomiędzy sobą. Wyliczone zostają też centroidy (średni reprezentanci) dla grup z pierwszej klasteryzacji. Następnie obliczone i zapisane zostają kolejne klasteryzacje wgłąb każdego z obliczonych klastrów. Te zstępujące rekurencyjne obliczenia kontynuowane są tak długo, jak ilość artykułów należących do danego klastra jest odpowiednio duża. 
+
+Podczas obliczania klasteryzacji jako współrzędne dla każdego z klasteryzowanych artykułów brane są wartości jego wektora cech z dołożonymi na końcu niego niezmiennikami grafowymi. Pozwala to potencjalnie uchwycić podobieństwo w strukturze dwóch artykułów, a nie tylko słowa które dany tekst posiada. 
 
 \subsection{Użycie wiedzy zewnętrznej}
-Ponieważ dysponowaliśmy wiedzą zewnętrzną w postaci kilkuset tysięcy artykułów serwisu reuters o tematyce finansowo-ekonomicznej, z których każdy był etykietowany kilkoma kategoriami do których należy, postanowiliśmy jej użyć. Dla każdej kategorii został policzony jej średni reprezentant, przy użyciu tych samych reprezentacji strukturalnych jak dla naszych artykułów, tj. wektor cech oraz niezmienniki grafowe.
+Ponieważ dysponowaliśmy wiedzą zewnętrzną w postaci kilkuset tysięcy artykułów serwisu reuters o tematyce finansowo-ekonomicznej, z których każdy był etykietowany kilkoma kategoriami do których należy, postanowiliśmy jej użyć. Dla każdej kategorii został policzony jej średni reprezentant, przy użyciu tych samych reprezentacji strukturalnych jak podczas liczenia centroid klastrów artykułów z bazy potencjalnych wyników, tj. wektor cech oraz niezmienniki grafowe.
 
 Posiadając obliczonych średnich reprezentantów dla naszych klastrów oraz poszczególnych kategorii z bazy artykułów reuters, dla każdej z centroid klastrów naszych artykułów obliczone zostały podobieństwa z każdą z centroid kategorii reuters. Następnie wybrane i zapisane zostały trzy najlepsze dla każdej z naszych grup. 
 

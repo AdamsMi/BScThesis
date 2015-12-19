@@ -1,19 +1,19 @@
 Pierwszym rodzajem wyszukiwania jest realizowanie 
-zapytań w postaci zbioru słów - analogicznie jak w wyszukiwarce google. Użytkownik wprowadza więc pewne frazy, które jego 
+zapytań w postaci zbioru słów - analogicznie jak w wyszukiwarce Google. Użytkownik wprowadza zatem pewne frazy, które jego 
 zdaniem dobrze opisywać będą interesujące go artykuły
  a rolą aplikacji jest te artykuły odnaleźć.
 Poniższy rozdział opisuje kolejne wykonane kroki (także zanim użytkownik dane zapytanie wprowadza) które wykonane zostały by aplikacja mogła na zapytania odpowiadać.
 
 \section{Preprocessing}
-Preprocessing to wszelkie czynności wykonane w celu ekstrakcji jak największej ilości informacji z posiadanych danych, które nie zależą od wykonanych przez użytkownika czynności (z tego też powodu można je wykonać zawczasu - potrzebne są tylko te dane w których posiadaniu już jesteśmy)
+Preprocessing to wszelkie czynności wykonane w celu ekstrakcji jak największej ilości informacji z posiadanych danych, które nie zależą od wykonanych przez użytkownika czynności (z tego też powodu można je wykonać zawczasu - dodatkowe dane ponad te posiadane już przed uruchomieniem aplikacji nie są potrzebne).
 
 \subsection{Czyszczenie artykułów}
-By w sposób wygodny i wydajny pracować z artykułami, niezbędne jest wypracowanie dla nich spójnego i efektywnego sposobu reprezentacji, który równocześnie zachowywałby jak największą dawkę wyekstrahowanych informacji. W celu dobrej ekstrakcji informacji posiadane artykuły są najpierw "czyszczone" - usuwana jest z nich jak największa ilość szumu, czyli zbędnie przechowywane informacje.
+By w sposób wygodny i wydajny pracować z artykułami, niezbędne jest wypracowanie dla nich spójnego i efektywnego sposobu reprezentacji, który równocześnie zachowywałby jak największą ilość wyekstrahowanych informacji. W celu dobrej ekstrakcji informacji posiadane artykuły są najpierw oczyszczane - usuwana jest z nich jak największa ilość szumu, czyli zbędnie przechowywane informacje.
 Operacja ta dokonana jest w nastepujących krokach:
 
 \begin{description}
   \item[Stop words removal] \hfill \\
- Pierwszym krokiem w procesie czyszczenia artykułów jest usunięcie z niego wszystkich słów klasyfikowanych jako tzw. stop words. Są to słowa takie jak spójniki czy inne słowa które same w sobie nie przenoszą konkretnego znaczenia i z punktu widzenia reprezentacji strukturalnej artykułów nie niosą żadnej wartości. Usunięcie ich powoduje zatem zagęszczenie słów przenoszących informacje w ramach danego artykułu.
+ Pierwszym krokiem w procesie czyszczenia artykułów jest usunięcie z niego wszystkich słów klasyfikowanych jako tzw. stop words. Są to spójniki czy inne słowa które same w sobie nie przenoszą konkretnego znaczenia i z punktu widzenia reprezentacji strukturalnej artykułów nie niosą żadnej wartości. Usunięcie ich powoduje zatem zagęszczenie istotnych słów w ramach danego artykułu.
  
   \item[Stemming] \hfill \\
 Jest to proces sprowadzania słowa do jego rdzenia. Operacja ta powoduje, że spokrewnione wyrazy będące różnymi częściami mowy zostają skrócone do jednakowego słowa, dzięki czemu artykuły je zawierające przenoszą teraz taką samą treść i łatwiej będzie odnaleźć pomiędzy nimi semantycze powiązanie.
@@ -27,15 +27,15 @@ Jest to proces sprowadzania słowa do jego rdzenia. Operacja ta powoduje, że sp
  stemmer
  }
  
- Rys. 1 - Przykładowe wyniki algorytmu stemmingu. Różne słowa o tym samym rdzeniu sprowadzane są do jednakowego wyrazu.
+ Rys. 1 - Przykładowe wyniki algorytmu stemmingu. Różne słowa sprowadzane są do tego samego rdzenia.
 \end{center}
 
 \section{Reprezentacja strukturalna}
 Po dokonaniu czyszczenia plików posiadamy artykuły w postaci maksymalnie skróconych słów przenoszących interesujące nasz znaczenie. Możliwe jest zatem przystąpienie do tworzenia ich reprezentacji innych niż plik zawierający kolejne wyrazy.
 \subsection{Bag of words}
-Reprezentacją na której będziemy w znacznej części polegać jest reprezentacja bag-of-words czyli wektor cech. Każdy artykuł jest w niej opisany wektorem o długości równej mocy zbioru wszystkich słów występujących w posiadanym korpusie artykułów. Słowa w tym zbiorze zostają ponumerowane i następnie dla każdego artykułu jest tworzony na tej podstawie odpowiedni wektor. Będąc początkowo wektorem zerowym, zostaje on wypełniony poprzez dodawanie wartości jednostkowej na odpowiednim miejscu dla każdego występującego w danym artykule słowa. Po obliczeniu takiego wektora dla każdego posiadanego artykułu, zostają one ułożone obok siebie i uformowana zostaje macierz bag-of-words która następnie zostaje zapisana.
+Reprezentacją na której wyszukiwarka będzie w znacznej części polegać to reprezentacja bag-of-words czyli wektor cech. Każdy artykuł jest w niej opisany wektorem o długości równej mocy zbioru wszystkich słów występujących w posiadanym korpusie artykułów. Słowa w tym zbiorze zostają ponumerowane i następnie dla każdego artykułu jest tworzony na tej podstawie odpowiedni wektor. Będąc początkowo wektorem zerowym, zostaje on wypełniony poprzez dodawanie wartości jednostkowej na odpowiednim miejscu dla każdego występującego w danym artykule słowa. Po obliczeniu takiego wektora dla każdego posiadanego artykułu, zostają one ułożone obok siebie i uformowana zostaje macierz bag-of-words która następnie zostaje zapisana.
 
-Zaczynamy więc od obliczenia zbioru wystkich słów występujących w artykułach.
+Budowanie macierzy bag-of-words zaczyna się od obliczenia zbioru wystkich słów występujących w artykułach.
 Przyjmijmy zatem oznaczenie:
 \begin{center}
 $A$ - zbiór wszystkich słów z posiadanych artykułów
@@ -45,7 +45,7 @@ Zadajemy następnie odwzorowanie bijektywne:
 \begin{center}
 $f:A->X$, gdzie $X = \{ x: x \in \mathbb{N}_{+} \land x \leq \#A \} $
 \end{center}
-Odwzorowanie to więc indeksuje słowa kolejnymi liczbami naturalnymi.\\ 
+Odwzorowanie to indeksuje słowa kolejnymi liczbami naturalnymi.\\ 
 Na jego podstawie można skonstruować wektor cech dla kolejnych artykułów. Dla każdego z nich wystarczy rozpatrzeć każde znajdujące się w nim słowo $s$ i dodać $1$ do początkowo zerowego wektora na pozycji $f(s)$.
 
 Wartości elementów utworzonej macierzy M skonstruowanej przez ułożenie wektorów cech przetwarzanych artykułów jako kolumny wynoszą więc:
@@ -57,7 +57,7 @@ Proste wyznaczanie wektorów cech posiada pewne isotne wady. Ponieważ ta reprez
 
 \begin{description}
   \item[Inverse document frequency] \hfill \\
-Dla danego korpusu artykułów, co jest szczególnie widoczne przy ich konkretnej tematyce - u nas to tematyka finansowa - pewne słowa nie będą właściwie niosły żadnej informacji. Przykładowo rozważając artykuły o tematyce motoryzacyjnej, łatwo jest wyobrazić sobie, że słowo "auto" będzie występować w prawie każdym tekście. Dla naszego zbioru takim wyrazem może być "money". Zastosowana więc została technika osłabienia wpływu często występujących słów na obliczane podobieństwo pomiędzy artykułami, a także pomiędzy zapytaniem użytkownika a artykułami.
+Dla danego korpusu artykułów, co jest szczególnie widoczne przy ich konkretnej tematyce - u nas to tematyka finansowa - pewne słowa nie będą właściwie niosły żadnej informacji. Przykładowo rozważając artykuły o tematyce motoryzacyjnej, łatwo jest wyobrazić sobie, że słowo $auto$  będzie występować w prawie każdym tekście. Dla naszego zbioru takim wyrazem może być $money$. Zastosowana więc została technika osłabienia wpływu często występujących słów na obliczane podobieństwo pomiędzy artykułami, a także pomiędzy zapytaniem użytkownika a artykułami.
 
 Dla każdego wyrazu wystepującego w naszym zbiorze artykułów obliczona zostaje wartość wyrażenia
 
@@ -67,10 +67,10 @@ $idf_w = log\frac{N}{df_w}$, gdzie\\
 $df_w$ - ilość dokumentów spośród przetwarzanego zbioru które posiadają wyraz $w$\\
 $N$ - Ilość wszystkich przetwarzanych dokumentów 
 
-Następnie wiersze macierzy odpowiadające ilości wystąpień danego słowa w kolejnych artykułach zostają przez wyliczoną dla niego wartość idf. Czynność ta wykonana zostaje dla każdego słowa. Tym sposobem waga słów wystepujących rzadko zostaje zwiększona, a tych bardziej powszechnych zmniejszona.
+Po obliczeniu wartości idf dla danego słowa, wymnożone przez niego zostają elementy macierzy bag-of-words odpowiadające temu wyrazowi. Czynność ta wykonana zostaje dla każdego słowa. Tym sposobem waga słów wystepujących rzadko zostaje zwiększona, a tych bardziej powszechnych zmniejszona.
 
   \item[Normalizacja] \hfill \\
-Warto zwrócić uwagę, że stosując reprezentację bag-of-words, artykuły dłuższe będą posiadały statystycznie więcej niezerowych elementów, a wartości dla słów będą większe (gdyż słowo częściej będzie występować tu wielokrotnie). Spowodować to może zaburzenie wyników podczas obliczania podobieństw pomiędzy różnymi artykułami. Dlatego też kolejne wiersze, czyli wartości dla kolejnych słów dla rozważanych artykułów zostają zostają przemnożone przez wartość
+Warto zwrócić uwagę, że stosując reprezentację bag-of-words, artykuły dłuższe będą posiadały statystycznie więcej niezerowych elementów, a wartości dla słów będą większe (gdyż słowo częściej będzie występować tu wielokrotnie). Spowodować to może zaburzenie wyników podczas obliczania podobieństw pomiędzy różnymi artykułami. Dlatego też kolejne wiersze, czyli wartości dla kolejnych słów dla rozważanych artykułów zostają przemnożone przez wartość
 $$\frac{1}{\sqrt{\sum\limits_{i=1}^{n} A_{is}}}$$
 
 gdzie:\\
@@ -79,7 +79,7 @@ A - macierz bag-of-words\\
 s - indeks rozważanego słowa\\
  
 \end{description}
-\section{Dekompozycja SVD oraz low-rank approximation}
+\section{SVD oraz low-rank approximation}
 Dekompozycja SVD (ang. Singular Value Decomposition), to pewien rozkład macierzy na iloczyn trzech specyficznych macierzy. Korzystamy z faktu, że każdą macierz rzeczywistą A można przedstawić w postaci rozkładu SVD:
 
 $$A=U\Sigma V ^T$$
@@ -101,12 +101,12 @@ Nawet dla zbiorów o niewielkim rozmiarze macierz bag-of-words posiadać będzie
 
 
 \section{Latent Dirichlet Allocation}
-LDA to model który stara się opisać zbiór obserwacji za pomocą tzw. ukrytych grup (czyli takich które muszą zostać wywnioskowane z danych), dzięki czemu próbuje odpowiedzieć na pytanie dlaczego pewne elementy danych są podobne. Dla dokumentów zawierających słowa, model ten reprezentuje je [dokumenty] jako miks niewielkiej liczby tematów. Każdy z tematów z kolei zostaje zamodelowany jako pewna dystrybucja (miks) słów wchodzących w jego skład. Sam algorytm, działając określoną liczbę iteracji stopniowo poprawia jakość przypisania słów do tematów przeliczając ich dystrybucję na nowo. Problemem jest wartość $k$, czyli ustalona ilość tematów, z których dokumenty się mają składać. Dobry wybór wartości tego argumentu jest kluczowy dla dobrego działania artykułu.
+LDA to model który stara się opisać zbiór obserwacji za pomocą tzw. ukrytych grup (czyli takich które muszą zostać wywnioskowane z danych), dzięki czemu próbuje odpowiedzieć na pytanie dlaczego pewne elementy danych są podobne. Dla dokumentów zawierających słowa, model ten reprezentuje je [dokumenty] jako miks niewielkiej liczby tematów. Każdy z tematów z kolei zostaje zamodelowany jako pewna dystrybucja (miks) słów wchodzących w jego skład. Sam algorytm, działając określoną liczbę iteracji stopniowo poprawia jakość przypisania słów do tematów przeliczając ich dystrybucję na nowo. Problemem jest wartość $k$, czyli ustalona ilość tematów, z których dokumenty się mają składać. Dobry wybór wartości tego argumentu jest kluczowy dla dobrego działania algorytmu.
 
-LDA jest traktowane w naszej aplikacji jako alternatywne podejście wobec SVD. Użytkownik ma możliwość w ustawieniach aplikacji wybrać jakiego rodzaju wyszukiwanie preferuje (Szczegóły wyszukiwania opisane zostały poniżej). W trakcie eksperymentów zauważyliśmy znacznie lepsze wyniki stosując wyszukiwanie używając macierzy powstałej przez dekompozycę SVD i low-rank-approximation.
+LDA jest traktowane w naszej aplikacji jako alternatywne podejście wobec SVD. Użytkownik ma możliwość w ustawieniach aplikacji wybrać jakiego rodzaju wyszukiwanie preferuje (szczegóły wyszukiwania opisane zostały poniżej). W trakcie eksperymentów zauważono znacznie lepsze wyniki stosując wyszukiwanie używając macierzy powstałej przez dekompozycę SVD i low-rank-approximation.
 
 \section{Wyszukiwanie}
-Podczas wyszukiwania zapytanie jest traktowane jako artykuł. Zapytanie jest więc czyszczone, następuje stemming oraz stop words removal. Skonstruowany zostaje wektor bag-of-words. 
+Podczas wyszukiwania zapytanie jest traktowane jako artykuł, zostaje więc analogicznie jak artykuł czyszczone, następuje stemming oraz stop words removal. Skonstruowany zostaje wektor bag-of-words. 
 
 \subsection{Wyszukiwanie stosując SVD}
 Obliczając podobieństwo pomiędzy wektorem reprezentującym zapytanie a kolumnami macierzy będącymi wektorami cech artykułów, znajdowane są te z nich dla których miara podobieństwa jest największa i to one stanowią zawartość wyniku dla użytkownika.

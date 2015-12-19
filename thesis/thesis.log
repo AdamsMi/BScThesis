@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.11.26)  19 DEC 2015 00:35
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.11.26)  19 DEC 2015 20:27
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1005,15 +1005,15 @@ LaTeX Font Info:    Font shape `OMS/lmr/m/n' in size <12> not available
 
 ]
 Rozdzia\l  3.
-(./chapters/aspekty.tex) [5
+(./chapters/aspekty.tex [5
 
-]
+]) [6]
 Rozdzia\l  4.
-(./chapters/komponenty.tex [6
+(./chapters/komponenty.tex [7
 
-]) [7]
+]) [8]
 Rozdzia\l  5.
-(./chapters/zbiory.tex) [8
+(./chapters/zbiory.tex) [9
 
 ]
 Rozdzia\l  6.
@@ -1023,37 +1023,56 @@ Overfull \hbox (1.1085pt too wide) in paragraph at lines 1--6
 y-ta« w po-staci zbioru
  []
 
-[9
+[10
 
-] [10] [11]
-Overfull \hbox (6.91504pt too wide) in paragraph at lines 70--71
-[]\T1/lmr/m/n/12 Nast¦pnie wier-sze ma-cie-rzy od-po-wia-da-j¡ce ilo-±ci wy-st¡
--pie« da-nego sªowa
- []
-
-[12]
+] [11] [12] [13]
 Underfull \hbox (badness 10000) in paragraph at lines 76--80
 
  []
 
-[13] [14]
+[14] [15]
 Underfull \hbox (badness 10000) in paragraph at lines 117--118
 
  []
 
-[15]) [16]
+[16]) [17]
 Rozdzia\l  7.
-(./chapters/obliczenia2.tex [17
+(./chapters/obliczenia2.tex [18
 
 ]
-Overfull \hbox (0.12903pt too wide) in paragraph at lines 19--20
+Overfull \hbox (7.27104pt too wide) in paragraph at lines 27--28
+[]\T1/lmr/m/n/12 Niezmiennik ten jest ±red-ni¡ aryt-me-tyczn¡
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 29--35
+
+ []
+
+[19]
+Underfull \hbox (badness 10000) in paragraph at lines 42--47
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 50--54
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 61--66
+
+ []
+
+[20]
+Overfull \hbox (0.12903pt too wide) in paragraph at lines 77--78
 []\T1/lmr/m/n/12 Posiadaj¡c ob-li-czo-nych ±red-nich re-pre-zen-tan-tów dla na-
 szych kla-strów oraz
  []
 
-) [18]
+) [21] [22]
 Rozdzia\l  8.
-(./chapters/organizacja_pracy.tex [19
+(./chapters/organizacja_pracy.tex [23
 
 ]
 Overfull \hbox (0.3572pt too wide) in paragraph at lines 19--20
@@ -1061,12 +1080,12 @@ Overfull \hbox (0.3572pt too wide) in paragraph at lines 19--20
 aci en-gra-mów oraz
  []
 
-) [20] (./thesis.aux) ) 
+) [24] (./thesis.aux) ) 
 Here is how much of TeX's memory you used:
- 20055 strings out of 494501
- 411221 string characters out of 6167029
- 438933 words of memory out of 5000000
- 22960 multiletter control sequences out of 15000+600000
+ 20047 strings out of 494501
+ 411117 string characters out of 6167029
+ 438935 words of memory out of 5000000
+ 22952 multiletter control sequences out of 15000+600000
  40982 words of font info for 40 fonts, out of 8000000 for 9000
  319 hyphenation exceptions out of 8191
  62i,7n,73p,10403b,757s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1086,10 +1105,10 @@ pe1/public/lm/lmr8.pfb></usr/local/texlive/2015basic/texmf-dist/fonts/type1/pub
 lic/lm/lmsy10.pfb></usr/local/texlive/2015basic/texmf-dist/fonts/type1/public/l
 m/lmsy8.pfb></usr/local/texlive/2015basic/texmf-dist/fonts/type1/public/amsfont
 s/symbols/msbm10.pfb>
-Output written on thesis.pdf (21 pages, 258322 bytes).
+Output written on thesis.pdf (25 pages, 270379 bytes).
 PDF statistics:
- 154 PDF objects out of 1000 (max. 8388607)
- 100 compressed objects within 1 object stream
+ 168 PDF objects out of 1000 (max. 8388607)
+ 109 compressed objects within 2 object streams
  0 named destinations out of 1000 (max. 500000)
  126 words of extra memory for PDF output out of 10000 (max. 10000000)
 
