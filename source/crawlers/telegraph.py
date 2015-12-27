@@ -49,7 +49,6 @@ class TelegraphManager(BaseManager):
     def get_next_link(self, verbose=False):
 
         # Get new links if queue is empty
-        # TODO if one site has 50 for day, another 20 - it will be faster in the past
         if self.queue.empty():
             link = self.next_archive_link(verbose)
             links = self.get_all_article_links(link, verbose = False)
