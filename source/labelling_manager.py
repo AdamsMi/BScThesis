@@ -2,15 +2,19 @@
 '''
 This module calculates similarity between a cluster's centroid and category's centroid
  for every k-means cluster and every reuters' category.
+After that, the best 3 Reuters categories are chosen for each cluter.
 '''
 
 import os
 import pickle
 
-from search_config      import DIR_CENTROIDS
-from scipy.sparse       import csc_matrix
-from search_config      import DIR_CLUST_CENTROIDS
-from collections import defaultdict
+from search_config              import DIR_CENTROIDS
+from scipy.sparse               import csc_matrix
+from collections                import defaultdict
+from search_config              import DIR_CLUST_CENTROIDS, DIR_TOPIC_CODES
+from reuters_centroid_creator   import readCategoriesFromFile
+
+
 
 def loadMatrix(directory):
     with open(directory + 'data.pkl', 'rb') as inputFile:
@@ -39,6 +43,10 @@ def loadMatrix(directory):
 
     return csc_matrix((data, indices, indptr)), amountOfFiles, listOfArticleFiles
 
+def select3BestCategoriesPerCluster(simils):
+    dictsToTuples = [[a.keys()[0], a.values()[0]] for a in simils]
+    return sorted(dictsToTuples, key= lambda x : x[1], reverse=True)[:3]
+
 
 def fasterCorrelations(matrix, indices, vector,  amountOfDocuments):
     similarities = []
@@ -53,7 +61,7 @@ def fasterCorrelations(matrix, indices, vector,  amountOfDocuments):
 centroidList = filter(lambda x : '.' not in x , os.listdir(DIR_CENTROIDS))
 print centroidList
 
-dictOfResults = defaultdict(list)
+dictOfRes = defaultdict(list)
 ct = 0
 for ctName in centroidList:
     print ctName
@@ -64,16 +72,22 @@ for ctName in centroidList:
     a,b = curr_centroid.nonzero()
     for x in os.listdir(DIR_CLUST_CENTROIDS):
         if '.' not in x:
-            #print x
             with open(DIR_CLUST_CENTROIDS + x) as input:
                 clust_centroid = pickle.load(input)
                 sum = 0.0
                 for ind in a:
                     sum+= curr_centroid[ind,0] * clust_centroid[ind]
-                #print sum
-                dictOfResults[x].append({ctName : sum})
+                dictOfRes[x].append({ctName : sum})
 
-print dictOfResults
 
-with open(DIR_CLUST_CENTROIDS + 'res', 'wb') as output:
-    pickle.dump(dictOfResults, output)
+catMap = dict(readCategoriesFromFile(DIR_TOPIC_CODES))
+
+ans = {}
+for clustNr, similarities in dictOfRes.items():
+    bestChoices = select3BestCategoriesPerCluster(similarities)
+    for x in bestChoices:
+        x[0] = catMap[x[0]]
+    ans[clustNr] = bestChoices
+print ans
+with open(DIR_CLUST_CENTROIDS + 'res_limited', 'wb') as output:
+    pickle.dump(ans, output)
