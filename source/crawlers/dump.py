@@ -19,14 +19,14 @@ from source.search_config import DIR_DUMP, DIR_LOG
 #      Variables     #
 ######################
 
-LOG_NAME = DIR_LOG + "log" + str(datetime.now())
+LOG_NAME = "../" + DIR_LOG + "log" + str(datetime.now())
 STOP_CONDITION = 30000
 i = 13446;
 
 # Crate all sites manager
 
-telegraph = datetime(2014, 11, 6, 12, 44, 57, 557000)
-routers = datetime(2015, 4, 28, 12, 44, 57, 557000)
+telegraph = datetime(2015, 11, 6, 12, 44, 57, 557000)
+routers = datetime(2015, 11, 28, 12, 44, 57, 557000)
 #
 telegraphManager = TelegraphManager(date=telegraph)
 roytersManager = RoytersManager(date=routers)
@@ -36,7 +36,7 @@ zerohedgeManager = ZeroHedgeManager()
 thestreetManager = TheStreetManager()
 
 # Start logging
-log = open(LOG_NAME, 'w')
+log = open(LOG_NAME, 'w+')
 
 ######################
 #       Methods      #
@@ -69,7 +69,7 @@ def close_all():
 def dump(manager, prefix):
     global i
     crawler = manager.get_next_link()
-    if crawler.dump(DIR_DUMP + str(i) + prefix, verbose=True, add_links=True):
+    if crawler.dump("../" + DIR_DUMP + str(i) + prefix, verbose=True, add_links=True):
         # Increase stop condition
         i+=1
     else:

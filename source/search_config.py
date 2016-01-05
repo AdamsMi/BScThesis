@@ -1,6 +1,6 @@
 # file dump downloader
 
-DIR_LOG = "../resources/logs"
+DIR_LOG = "../resources/logs/"
 
 # file cleaner
 
